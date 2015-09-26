@@ -4,17 +4,31 @@ import argparse, sys
 from pprint import pprint
 from amara_api import *
 
+
+# We suppose that the uploaded subtitles are complete (non-critical)
+is_complete = True # do we upload complete subtitles?
+sub_format = 'srt'
+
 def read_cmd():
    """Function for reading command line options."""
    desc = "Program for copying subtitles from YouTube to Amara."
-   parser = argparse.ArgumentParser(description=desc)
+   parser = argparse.ArgumentParser(description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing a column of YouTube IDs.')
-   parser.add_argument('-c','--credentials',dest='apifile',default='myAPI.txt', help='Text file containing your API key and username on the first line.')
+   parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
+   parser.add_argument('-l','--lang',dest='lang',default='en', help='Which language should we copy?')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
 apifile = opts.apifile
+lang = opts.lang
+# 
+
+# We suppose that the original language is English
+if lang == "en": 
+    is_original = True # is lang the original language of the video?
+else:
+    is_original = False
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
@@ -23,10 +37,13 @@ API_KEY, USERNAME = file.read().split()[0:]
 print('Using Amara username: '+USERNAME)
 print('Using Amara API key: '+API_KEY)
 
+# Reading file with YT id's
 ytids = []
 with open(infile, "r") as f:
    for line in f:
        ytids.append(line.replace('\n', ''))
+
+call("rm youtubedl.out", shell=True)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -35,13 +52,12 @@ amara_headers = {
    'format': 'json'
 }
 
-lang = 'en'
-is_original = True # is lang the original language of the video?
-is_complete = True # do we upload complete subtitles?
-sub_format = 'srt'
 
 for ytid in ytids:
-    ytdownload='youtube-dl --sub-lang "en" --sub-format "srt" --write-sub --skip-download '+ ytid
+    video_url = 'https://www.youtube.com/watch?v='+ytid
+
+    # Modify the following if you don't want to download subtitles
+    ytdownload='youtube-dl --sub-lang '+lang+' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url
     
     p = Popen(ytdownload, shell=True, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate()
@@ -57,9 +73,11 @@ for ytid in ytids:
     with open(fname, 'r') as content_file:
             subs = content_file.read()
     
+
+    #### Here we already have subtitles to upload in variable subs
+
     # Now check whether the video is already on Amara
     # If not, create it.
-    video_url = 'https://www.youtube.com/watch?v='+ytid
     amara_response = check_video( video_url, amara_headers)
     if amara_response['meta']['total_count'] == 0:
         amara_response = add_video(video_url, lang, amara_headers)
