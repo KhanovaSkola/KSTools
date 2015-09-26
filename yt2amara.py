@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from subprocess import Popen, PIPE, call, check_call
 import argparse, sys
 from pprint import pprint
@@ -43,7 +43,7 @@ with open(infile, "r") as f:
    for line in f:
        ytids.append(line.replace('\n', ''))
 
-call("rm youtubedl.out", shell=True)
+call("rm -f youtubedl.out", shell=True)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -57,18 +57,18 @@ for ytid in ytids:
     video_url = 'https://www.youtube.com/watch?v='+ytid
 
     # Modify the following if you don't want to download subtitles
-    ytdownload='youtube-dl --sub-lang '+lang+' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url
+    ytdownload='youtube-dl  --youtube-skip-dash-manifest  --sub-lang '+lang+' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url
     
     p = Popen(ytdownload, shell=True, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate()
     f = open("youtubedl.out", "a")
-    f.write(out)
+    f.write(out.decode('UTF-8'))
     f.close()
     if err:
         print(err)
         print("Error during downloading subtitles..")
         sys.exit(1)
-    fname = out.split('Writing video subtitles to: ')[1].strip('\n')
+    fname = out.decode('UTF-8').split('Writing video subtitles to: ')[1].strip('\n')
     print('Subtitles downloaded to file:'+fname)
     with open(fname, 'r') as content_file:
             subs = content_file.read()
@@ -100,28 +100,20 @@ for ytid in ytids:
     if is_present:
         print("Language "+lang+" is already present in Amara video id:"+amara_id)
         print("Subtitle revision number: "+str(sub_version))
-        print("Should I upload the subtitles anyway? [yes/no]")
-        answer = ''
-        while answer != "no" and answer != "yes":
-            answer = raw_input('-->')
-            if answer == "yes":
-                r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers)
-                if r['version_no'] == sub_version+1:
-                    print('Succesfully uploaded subtitles to: '+r['site_uri'])
-            elif answer == "no":
-                pass
-            else:
-                print("Please enter yes or no.")
+        answer = answer_me("Should I upload the subtitles anyway?")
+        if not answer:
+            break
     else:
         r = add_language(amara_id, lang, is_original, amara_headers)
-        r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers)
-        if r['version_no'] == sub_version+1:
-            print('Succesfully uploaded subtitles to: '+r['site_uri'])
-        else:
-            print("This is weird. Something probably went wrong during upload.")
-            print("This is the response I got from Amara")
-            pprint(r)
-            sys.exit(1)
+
+    r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers)
+    if r['version_no'] == sub_version+1:
+        print('Succesfully uploaded subtitles to: '+r['site_uri'])
+    else:
+        print("This is weird. Something probably went wrong during upload.")
+        print("This is the response I got from Amara")
+        pprint(r)
+        sys.exit(1)
 
     print('----------------------------------------')
 

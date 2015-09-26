@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-import requests, json
+#!/usr/bin/env python3
+import json, sys
+import requests 
 from pprint import pprint
 
-# TODO
-# the try - except code is probably not working properly
-# In general, error handling is probably not done well.
-
+# TODO: functions for comparing 2 videos
 AMARA_BASE_URL = 'https://www.amara.org/'
 
 
@@ -18,7 +16,7 @@ def check_video(video_url, amara_headers):
         response = requests.get(url, params=body, headers=amara_headers )
         json_response = response.json()
     except requests.HTTPError as e:
-        print e
+        print(e)
         sys.exit(1)
 
     return json_response
@@ -35,7 +33,7 @@ def add_video(video_url, video_lang, amara_headers):
         response = requests.post(url, data=json.dumps(body), headers=amara_headers )
         json_response = response.json()
     except requests.HTTPError as e:
-        print e
+        print(e)
         sys.exit(1)
 
     return json_response
@@ -53,7 +51,7 @@ def add_language(amara_id, lang, is_original, amara_headers):
         response = requests.post(url, data=json.dumps(body), headers=amara_headers )
         json_response = response.json()
     except requests.HTTPError as e:
-        print e
+        print(e)
         sys.exit(1)
 
     return json_response
@@ -68,7 +66,7 @@ def check_language(amara_id, lang, amara_headers):
         r.raise_for_status()
         json_response = r.json()
     except requests.HTTPError as e:
-        print e
+        print(e)
         sys.exit(1)
 
     for obj in json_response['objects']:
@@ -94,12 +92,52 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers):
         response = requests.post(url, data=json.dumps(body), headers=amara_headers )
         json_response = response.json()
     except requests.HTTPError as e:
-        print e
+        print(e)
         sys.exit(1)
 
     return json_response
 
-def download_subs():
-    pass
 
+def download_subs(amara_id, lang, sub_format, amara_headers ):
+    url = AMARA_BASE_URL+'/api/videos/'+amara_id+'/languages/'+lang+'/subtitles/?format='+sub_format
+    body = { 
+        'language_code': lang,
+        'video-id': amara_id
+        }
+    try:
+        r = requests.get(url, data=json.dumps(body), headers=amara_headers )
+        r.raise_for_status()
+    except requests.HTTPError as e:
+        print("ERROR: during download of subtitles.")
+        print(e)
+        sys.exit(1)
+
+
+    # We should always use "check_language" before we atempt to download
+    # This is just that we do not copy empty subtitles
+    # Maybe we could give higher treshold.
+    if len( r.text ) < 20:
+        print("ERROR: Something shitty happened, the length of subtitles is too short.")
+        print("This is what I got from Amara.")
+        pprint(r.text)
+        answer = asnwer_me("Should I proceed?")
+        if not answer:
+            sys.exit(1)
+
+    return r.text
+
+def answer_me(question):
+    print(question+" [yes/no]")
+    while True:
+        answer = input('-->')
+        if answer.lower() == "yes":
+            return True
+        elif answer.lower() == "no":
+            return False
+        else:
+            print("Please enter yes or no.")
+
+
+def compare_videos(video_url1, video_url2):
+    pass
 
