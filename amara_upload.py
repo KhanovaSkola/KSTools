@@ -13,7 +13,10 @@ def read_cmd():
    """Function for reading command line options."""
    desc = "Program for copying subtitles from YouTube to Amara."
    parser = argparse.ArgumentParser(description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-   parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing a column of YouTube IDs.')
+   parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
+   parser.add_argument('-f',dest='files', action="store_true",  help='Upload subtitles from files  to Amara.')
+   parser.add_argument('-y',dest='yt', action="store_true", help='Download subtitles from YouTube and upload them to Amara.')
+#   parser.add_argument('-a',dest='list_of_amara_ytids', help='Two lists of YTids for copying between 2 same Amara videos.')
    parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
    parser.add_argument('-l','--lang',dest='lang',default='en', help='Which language should we copy?')
    return parser.parse_args()
@@ -22,7 +25,6 @@ opts = read_cmd()
 infile = opts.input_file
 apifile = opts.apifile
 lang = opts.lang
-# 
 
 # We suppose that the original language is English
 if lang == "en": 
@@ -30,18 +32,34 @@ if lang == "en":
 else:
     is_original = False
 
+if opts.yt == True and opts.files == True:
+    print('Conflicting options "-f" and "-y"')
+    print('Type "-h" for help')
+    sys.exit(1)
+    
+if opts.yt == False and opts.files == False:
+    print('Please, set either "-f" or "-y"')
+    print('Type "-h" for help')
+    sys.exit(1)
+
+ytids = []
+files = []
+# Reading file with YT id's
+with open(infile, "r") as f:
+    for line in f:
+        if opts.yt == True:
+#            ytids.append(line.replace('\n', ''))
+            ytids.append(line.split())
+        elif opts.files == True:
+            ytids.append(line.split()[0])
+            files.append(line.split()[1])
+
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
 file = open(apifile, "r")
 API_KEY, USERNAME = file.read().split()[0:]
 print('Using Amara username: '+USERNAME)
 print('Using Amara API key: '+API_KEY)
-
-# Reading file with YT id's
-ytids = []
-with open(infile, "r") as f:
-   for line in f:
-       ytids.append(line.replace('\n', ''))
 
 call("rm -f youtubedl.out", shell=True)
 
@@ -53,26 +71,32 @@ amara_headers = {
 }
 
 
-for ytid in ytids:
-    video_url = 'https://www.youtube.com/watch?v='+ytid
+for i in range(len(ytids)):
+    video_url = 'https://www.youtube.com/watch?v='+ytids[i]
 
-    # Modify the following if you don't want to download subtitles
-    ytdownload='youtube-dl  --youtube-skip-dash-manifest  --sub-lang '+lang+' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url
+    if opts.yt == True:
+        ytdownload='youtube-dl  --youtube-skip-dash-manifest  --sub-lang '+lang+' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url
     
-    p = Popen(ytdownload, shell=True, stdout=PIPE, stderr=PIPE)
-    out, err = p.communicate()
-    f = open("youtubedl.out", "a")
-    f.write(out.decode('UTF-8'))
-    f.close()
-    if err:
-        print(err)
-        print("Error during downloading subtitles..")
-        sys.exit(1)
-    fname = out.decode('UTF-8').split('Writing video subtitles to: ')[1].strip('\n')
-    print('Subtitles downloaded to file:'+fname)
-    with open(fname, 'r') as content_file:
+        p = Popen(ytdownload, shell=True, stdout=PIPE, stderr=PIPE)
+        out, err = p.communicate()
+        f = open("youtubedl.out", "a")
+        f.write(out.decode('UTF-8'))
+        f.close()
+        if err:
+            print(err)
+            print("Error during downloading subtitles..")
+            sys.exit(1)
+        fname = out.decode('UTF-8').split('Writing video subtitles to: ')[1].strip('\n')
+        print('Subtitles downloaded to file:'+fname)
+        with open(fname, 'r') as content_file:
             subs = content_file.read()
-    
+
+    elif opts.files == True:
+        f = open(files[i],"r")
+        subs = f.read()
+
+
+
 
     #### Here we already have subtitles to upload in variable subs
 
@@ -89,7 +113,7 @@ for ytid in ytids:
     else:
         amara_id =  amara_response['objects'][0]['id']
         amara_title =  amara_response['objects'][0]['title']
-        print("Video with YTid "+ytid+" is already present on Amara")
+        print("Video with YTid "+ytids[i]+" is already present on Amara")
         print("Title: "+amara_title)
         print(AMARA_BASE_URL+'cs/videos/'+amara_id)
 
