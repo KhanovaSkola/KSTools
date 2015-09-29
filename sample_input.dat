@@ -1,2 +1,14 @@
-Pk4d9lY48GI
-nv2kfBFkv4s
+# This is just the sample input for 3 different modes of operation.
+# In the real input file, comments are not allowed!!
+
+# Sample input if you download subs from YouTube
+YT_ID_1  (e.g. Pk4d9lY48GI)
+YT_ID_2
+
+# Sample input if you have subtitles on your disc
+YT_ID1 filename1.srt
+YT_ID2 filename2.srt
+
+# Sample input if you copy subtitles between two Amara videos
+YT_ID_FROM_1	YT_ID_TO_1
+YT_ID_FROM_2	YT_ID_TO_2

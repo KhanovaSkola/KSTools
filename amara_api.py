@@ -3,8 +3,10 @@ import json, sys
 import requests 
 from pprint import pprint
 
-# TODO: functions for comparing 2 videos
 AMARA_BASE_URL = 'https://www.amara.org/'
+
+# TODO: In function check_videos, we do not properly parse
+#       the paginated output. This might lead to errors when many languages are present.
 
 
 def check_video(video_url, amara_headers):
@@ -86,7 +88,6 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers):
         'language_code': lang,
         'is_complete': is_complete,   # Warning, this is deprecated
         #'action': "Publish"
-        'description': 'Subtitles copied from YouTube.'
         }
     try:
         response = requests.post(url, data=json.dumps(body), headers=amara_headers )
@@ -126,6 +127,41 @@ def download_subs(amara_id, lang, sub_format, amara_headers ):
 
     return r.text
 
+def compare_videos(amara_id1, amara_id2, amara_headers):
+    url1 = AMARA_BASE_URL+'api/videos/'+amara_id1
+    url2 = AMARA_BASE_URL+'api/videos/'+amara_id2
+
+    try:
+        r = requests.get(url1, headers=amara_headers )
+        r.raise_for_status()
+        len1 = r.json()['duration']
+    except requests.HTTPError as e:
+        print(e)
+        sys.exit(1)
+
+    try:
+        r = requests.get(url2, headers=amara_headers )
+        r.raise_for_status()
+        len2 = r.json()['duration']
+    except requests.HTTPError as e:
+        print(e)
+        sys.exit(1)
+
+
+    if len1 == len2:
+        return True
+    
+    else:
+        print('The length of the first video is:'+str(len1))
+        print('The length of the second video is:'+str(len2))
+        answer = answer_me("The lengths of the two videos are different. Should I proceed anyway?")
+        if answer:
+            return False
+        else:
+            sys.exit(1)
+
+
+
 def answer_me(question):
     print(question+" [yes/no]")
     while True:
@@ -137,7 +173,4 @@ def answer_me(question):
         else:
             print("Please enter yes or no.")
 
-
-def compare_videos(video_url1, video_url2):
-    pass
 
