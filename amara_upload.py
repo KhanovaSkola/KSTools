@@ -168,7 +168,7 @@ for i in range(len(ytids)):
         print("Subtitle revision number: "+str(sub_version))
         answer = answer_me("Should I upload the subtitles anyway?")
         if not answer:
-            break
+            continue
     else:
         r = add_language(amara_id, lang, is_original, amara_headers)
 
