@@ -90,7 +90,7 @@ for i in range(len(ytids)):
 
 #   PART 1: GETTING THE SUBTITLES 
     if opts.yt == True:
-        ytdownload = 'youtube-dl  --youtube-skip-dash-manifest  --sub-lang '+lang+ \
+        ytdownload = 'youtube-dl --sub-lang '+lang+ \
         ' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url_from
     
         p = Popen(ytdownload, shell=True, stdout=PIPE, stderr=PIPE)
