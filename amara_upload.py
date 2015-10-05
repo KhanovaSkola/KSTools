@@ -22,12 +22,17 @@ def read_cmd():
    parser.add_argument('-y',dest='yt', action="store_true", help='Download subtitles from YouTube and upload them to Amara.')
    parser.add_argument('-a',dest='amara', action="store_true", help='Copy subtitles between two same Amara videos.')
    parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
+   parser.add_argument('--skip-errors', dest='skip', default=False, action="store_true", help='Should I skip subtitles that could not be downloaded? \
+         The list of failed YTID\' will be printed to \"failed_yt.dat\".')
+#   parser.add_argument('--rewrite', dest='rewrite', default=False, action="store_true", help='Rewrite existing subtitles on upload. Use with extreme care!')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
 apifile = opts.apifile
 lang = opts.lang
+#rewrite = opts.rewrite
+rewrite = False
 
 # We suppose that the original language is English
 if lang == "en": 
@@ -59,7 +64,7 @@ API_KEY, USERNAME = file.read().split()[0:]
 print('Using Amara username: '+USERNAME)
 print('Using Amara API key: '+API_KEY)
 
-call("rm -f youtubedl.out", shell=True)
+call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -68,12 +73,13 @@ amara_headers = {
    'format': 'json'
 }
 
-print("This is what I got from the input file:")
-print(ytids)
+if len(ytids) < 20: # Do not print for large inputs
+   print("This is what I got from the input file:")
+   print(ytids)
 
-answer = answer_me("Should I proceed?")
-if not answer:
-    sys.exit(1)
+   answer = answer_me("Should I proceed?")
+   if not answer:
+      sys.exit(1)
 
 
 # Main loop
@@ -99,10 +105,26 @@ for i in range(len(ytids)):
         f.write(out.decode('UTF-8'))
         f.close()
         if err:
-            print(err)
-            print("Error during downloading subtitles..")
-            sys.exit(1)
-        fname = out.decode('UTF-8').split('Writing video subtitles to: ')[1].strip('\n')
+            f = open("youtubedl.err", "a")
+            f.write(err.decode('UTF-8'))
+            f.close()
+
+        fname = out.decode('UTF-8').split('Writing video subtitles to: ')
+        if len(fname) < 2:
+           print("ERROR: Requested subtitles were not found on YouTube.")
+           f = open("failed_yt.dat","a")
+           f.write(ytid_from+'\n')
+           f.close()
+           if opts.skip:
+              answer = True
+           else:
+              answer = answer_me("Should I continue with the rest anyway?")
+           if answer:
+              continue
+           else:
+              sys.exit(1)
+
+        fname = fname[1].strip('\n')
         print('Subtitles downloaded to file:'+fname)
         with open(fname, 'r') as content_file:
             subs = content_file.read()
@@ -166,7 +188,10 @@ for i in range(len(ytids)):
     if is_present:
         print("Language "+lang+" is already present in Amara video id:"+amara_id)
         print("Subtitle revision number: "+str(sub_version))
-        answer = answer_me("Should I upload the subtitles anyway?")
+        if opts.rewrite:
+           answer = True
+        else:
+           answer = answer_me("Should I upload the subtitles anyway?")
         if not answer:
             continue
     else:
