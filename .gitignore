@@ -1,5 +1,8 @@
-myapi.txt
+myapi*
 youtubedl.out
+topictree*
+SYNC/*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
