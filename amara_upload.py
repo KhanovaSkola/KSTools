@@ -3,17 +3,18 @@ from subprocess import Popen, PIPE, call, check_call
 import argparse, sys
 from pprint import pprint
 from amara_api import *
+from utils import answer_me
 
 
 # We suppose that the uploaded subtitles are complete (non-critical)
 is_complete = True # do we upload complete subtitles?
-sub_format = 'srt'
+sub_format = 'ttml'
 
 def read_cmd():
    """Function for reading command line options."""
    desc = "Program for uploading subtitles to Amara. There are three modes of operation, depending on the source of the subtitles. \
            You can get the subtitles from YouTube, or upload subtitles files, or copy subtitles between Amara videos. \
-           The format of the input file depends on the mode of operation."
+           The format of the input file depends on the mode of operation (see 'sample_input.dat')"
 #  parser = argparse.ArgumentParser(description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
@@ -24,15 +25,16 @@ def read_cmd():
    parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
    parser.add_argument('--skip-errors', dest='skip', default=False, action="store_true", help='Should I skip subtitles that could not be downloaded? \
          The list of failed YTID\' will be printed to \"failed_yt.dat\".')
-#   parser.add_argument('--rewrite', dest='rewrite', default=False, action="store_true", help='Rewrite existing subtitles on upload. Use with extreme care!')
+#   parser.add_argument('--rewrite', dest='always_rewrite', default=False, action="store_true", help='Automatically rewrite existing subtitles on upload. Use with extreme care!')
+   parser.add_argument('--no-rewrite', dest='rewrite', action="store_false", help='Never rewrite existing subtitles on upload!')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
 apifile = opts.apifile
 lang = opts.lang
-#rewrite = opts.rewrite
-rewrite = False
+never_rewrite = not opts.rewrite
+#always_rewrite = opts.always_rewrite
 
 # We suppose that the original language is English
 if lang == "en": 
@@ -50,6 +52,7 @@ if opts.yt == False and opts.files == False and opts.amara == False:
     print('Type "-h" for help')
     sys.exit(1)
 
+
 # List ytids may also contain filenames
 ytids = []
 # Reading file with YT id's
@@ -62,7 +65,7 @@ with open(infile, "r") as f:
 file = open(apifile, "r")
 API_KEY, USERNAME = file.read().split()[0:]
 print('Using Amara username: '+USERNAME)
-print('Using Amara API key: '+API_KEY)
+#print('Using Amara API key: '+API_KEY)
 
 call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
 
@@ -96,6 +99,7 @@ for i in range(len(ytids)):
 
 #   PART 1: GETTING THE SUBTITLES 
     if opts.yt == True:
+        print("Language "+lang+" is already present in Amara video id:"+amara_id)
         ytdownload = 'youtube-dl --sub-lang '+lang+ \
         ' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url_from
     
@@ -188,8 +192,9 @@ for i in range(len(ytids)):
     if is_present:
         print("Language "+lang+" is already present in Amara video id:"+amara_id)
         print("Subtitle revision number: "+str(sub_version))
-        if opts.rewrite:
-           answer = True
+        # currently we do not support always_rewrite option
+        if never_rewrite:
+           answer = False
         else:
            answer = answer_me("Should I upload the subtitles anyway?")
         if not answer:

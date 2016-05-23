@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE, call, check_call
 import argparse, sys
 from pprint import pprint
 from amara_api import *
+from utils import answer_me
 
 
 # We suppose that the uploaded subtitles are complete (non-critical)
@@ -135,5 +136,6 @@ for i in range(len(ytids)):
         subs = download_subs(amara_id_from, lang, sub_format, amara_headers )
         f = open(ytid_from +'.'+lang+'.srt', "w")
         f.write(subs)
+        f.close()
 
 
