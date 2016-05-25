@@ -8,17 +8,23 @@ from utils import *
 #topic = "cc-early-math-add-sub-basics"
 #tree = download_topic(topic)
 
-download = False
-read = True
+download = True
 
 if download:
     tree = download_topictree("Video")
-    save_obj_text(tree, "topictree_txt")
-    save_obj_bin(tree, "topictree_bin")
-elif read:
+    if tree != None:
+        save_obj_text(tree, "topictree_txt")
+        save_obj_bin(tree, "topictree_bin")
+    else:
+        tree = load_obj_bin("topictree_bin")
+else:
     tree = load_obj_bin("topictree_bin")
 
-with open("allvideos_ids.dat", "rw") as f:
-    yt = tree_print_videoids(tree, f)
+videos = set()
+tree_print_videoids(tree, videos)
 
+# Get rid of duplicates
+with open("allvideos_ids.dat","w") as out:
+    for v in videos:
+        out.write(v)
 

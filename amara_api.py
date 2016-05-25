@@ -2,6 +2,7 @@
 import json, sys
 import requests 
 from pprint import pprint
+from utils import *
 
 AMARA_BASE_URL = 'https://www.amara.org/'
 EXIT_ON_HTTPERROR  = False
@@ -40,6 +41,8 @@ def add_video(video_url, video_lang, amara_headers):
         eprint(e,"in amara_api::add_video")
         if EXIT_ON_HTTPERROR:
             sys.exit(1)
+        else:
+            return {}
 
     return json_response
 

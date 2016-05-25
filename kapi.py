@@ -67,7 +67,7 @@ def download_topictree(what='all'):
         if r.status_code == 304:
             print("Topic tree up-to-date")
             print("If you want to download anyway, remove file "+etagfile+" and run again.")
-            return ""
+            return None
         json_response = r.json()
     except requests.HTTPError as e:
         print(e)
@@ -79,14 +79,14 @@ def download_topictree(what='all'):
     return json_response
 
 
-def tree_print_videoids(tree, fout):
+def tree_print_videoids(tree, out_set):
     if tree["kind"] == "Video":
-        fout.write(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
+        out_set.add(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
     elif tree["kind"] == "Topic":
         if len(tree["children"]) <= 0:
             # This can happen if Topic includes only Exercises or Articles
            return
         for c in tree["children"]:
-            tree_print_videoids(c, fout)
+            tree_print_videoids(c, out_set)
 
 
