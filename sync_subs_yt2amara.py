@@ -80,15 +80,21 @@ ytid_exist = set()
 for l in f_vids:
     ytid_exist.add(l.split()[0])
 
+print("Current number of videos on Amara with subtitles in "+lang+" is:", len(ytid_exist))
+
 
 # Skip certain videos
 ytid_skip = set()
 try:
     with open("skip_videos.dat","r") as f:
         for l in f:
-            ytid_skip.add(l)
+            ytid_skip.add(l.split()[0])
 except:
     pass
+
+print("Current number of skipped videos on Amara:", len(ytid_skip))
+
+uploaded = 0
 
 # Main loop
 for i in range(len(ytids)):
@@ -166,6 +172,7 @@ for i in range(len(ytids)):
     fname = out.decode('UTF-8').split('Writing video subtitles to: ')
     if len(fname) < 2:
        print("ERROR: Requested subtitles were not found on YouTube. ", ytid_from)
+       missing++
        with open("failed_yt.dat","a") as f:
            f.write(ytid_from+'\n')
        continue
@@ -193,6 +200,12 @@ for i in range(len(ytids)):
 #    if r['version_no'] == sub_version+1:
     else:
         print('Succesfully uploaded subtitles: ',ytid_from)
+        uploaded++
         f_vids.write(ytid_from+'\n')
+
+
+print("(:Aaand we are finished!:)")
+print(USERNAME+" have succesfuly uploaded ",uploaded, " videos.")
+print(missing," videos are missing subtitles")
 
 
