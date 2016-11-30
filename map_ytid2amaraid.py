@@ -45,17 +45,11 @@ amara_headers = {
    'format': 'json'
 }
 
-if len(ytids) < 20: # Do not print for large inputs
-   print("This is what I got from the input file:")
-   print(ytids)
-
-   answer = answer_me("Should I proceed?")
-   if not answer:
-      sys.exit(1)
-
-
 # Main loop
 for i in range(len(ytids)):
+    if len(ytids[i]) == 0:
+        print("")
+        continue
     ytid_from = ytids[i][0]
     sys.stdout.flush()
     sys.stderr.flush()
@@ -66,12 +60,14 @@ for i in range(len(ytids)):
     # If not, create it.
     amara_response = check_video( video_url, amara_headers)
     if amara_response['meta']['total_count'] == 0:
-        amara_response = add_video(video_url, lang, amara_headers)
-        amara_id = amara_response['id']
-        amara_title =  amara_response['title']
-        print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
+        #amara_response = add_video(video_url, lang, amara_headers)
+        #amara_id = amara_response['id']
+        #amara_title =  amara_response['title']
+        #print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
+        print("Video not on Amara!",ytid_from)
     else:
         amara_id =  amara_response['objects'][0]['id']
         amara_title =  amara_response['objects'][0]['title']
-        print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
+        #print(AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
+        print(amara_id)
 
