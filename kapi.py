@@ -5,6 +5,10 @@ from pprint import pprint
 
 SERVER_URL = 'http://www.khanacademy.org'
 DEFAULT_API_RESOURCE = '/api/v1/'
+# Version 2 is not documented, here used only for topic tree
+# But apparently does not even fetch the whole tree, so new code will be needed
+#DEFAULT_API_RESOURCE = '/api/v2/'
+API2 = '/api/v2/'
 
 kapi_headers = {
    'Content-Type': 'application/json',
@@ -12,7 +16,7 @@ kapi_headers = {
 }
 
 
-def check_video(YTID):
+def kapi_check_video(YTID):
     url = SERVER_URL + DEFAULT_API_RESOURCE + 'videos/'  + YTID
     try:
         r = requests.get(url, headers=kapi_headers )
@@ -24,7 +28,7 @@ def check_video(YTID):
 
     return json_response
 
-def download_topic(topic):
+def kapi_download_topic(topic):
     url = SERVER_URL + DEFAULT_API_RESOURCE + 'topic/'  + topic
     try:
         r = requests.get(url, headers=kapi_headers )
@@ -37,12 +41,15 @@ def download_topic(topic):
     return json_response
 
 
-def download_topictree(what='all'):
-    """Argument can be "video", "exercise" or "topic" """
+def kapi_download_topictree(what='all'):
+    """Argument can be 'video', 'exercise', 'article', 'topic' or 'all' """
 
-    url = SERVER_URL + DEFAULT_API_RESOURCE + 'topictree'
+    if what == 'article':
+        url = SERVER_URL + API2 + 'topics/topictree'
+    else:
+        url = SERVER_URL + DEFAULT_API_RESOURCE + 'topictree'
 
-    etagfile = "topictree_etag.dat"
+    etagfile = "KAtree_"+what+"_etag.dat"
     etag = ""
     try:
         with open(etagfile, "r") as f:
@@ -56,10 +63,12 @@ def download_topictree(what='all'):
        'If-None-Match':  etag
     }
 
-    if what != "all":
+    if what != "all" and what != "video":
         body = {
             "kind": what
         }
+    else:
+        body = {}
 
     try:
         r = requests.get(url, params=body, headers=ka_headers )
@@ -73,13 +82,18 @@ def download_topictree(what='all'):
         print(e)
         sys.exit(1)
 
-    with open(etagfile, "w") as f:
-        f.write(r.headers["etag"])
+    # It seems that etag is not present in v2 api
+    if "etag" in r.headers:
+        with open(etagfile, "w") as f:
+            f.write(r.headers["etag"])
+    else:
+#        print("Etag not found in response header.")
+        pass
 
     return json_response
 
 
-def tree_print_videoids(tree, out_set):
+def kapi_tree_print_videoids(tree, out_set):
     if tree["kind"] == "Video":
         out_set.add(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
     elif tree["kind"] == "Topic":
@@ -87,6 +101,60 @@ def tree_print_videoids(tree, out_set):
             # This can happen if Topic includes only Exercises or Articles
            return
         for c in tree["children"]:
-            tree_print_videoids(c, out_set)
+            kapi_tree_print_videoids(c, out_set)
+
+
+def kapi_tree_print_full(tree, out_list):
+    if tree["kind"] == "Topic":
+
+        if len(tree["children"]) <= 0:
+            # This can happen if Topic includes only Exercises or Articles
+            # Articles seems to be topics as well
+           return
+        for c in tree["children"]:
+            if c['kind'] == "Topic":
+                title = c['title']
+                if title.split()[0] != "Skill":
+                    out_list.append(title+'\t'+c['description']+'\n')
+            kapi_tree_print_full(c, out_list)
+
+    else:
+
+        title = tree['title']
+        desc = tree['description']
+        if desc is None:
+            desc = " "
+        else:
+            desc = desc.expandtabs(0).replace('\n',' ')
+        ka_url = tree['ka_url']
+        # These are useless
+        if "keywords" in tree:
+            keywords = tree['keywords']
+        else:
+            keywords = " "
+
+        if tree["kind"] == "Video":
+            ytid = tree["youtube_id"]
+            # yt_url is not present in all videos, we will make our own
+            #yt_url = tree['url']
+            yt_url = 'https://www.youtube.com/watch?v='+ytid
+            if 'mp4' in tree['download_urls']:
+                download_urls = tree['download_urls']['mp4']
+            else:
+                download_urls = " "
+            dur = str(tree['duration'])
+        else:
+            ytid = " "
+            yt_url = " "
+            download_urls = " "
+            dur = " "
+ 
+        # This does not work, google sheets interpret this as a text
+        link_ka = 'HYPERLINK("'+ka_url+'","link")'
+        link_yt = 'HYPERLINK("'+yt_url+'","link")'
+
+        # TODO add Amara link - maybe we don't need auth for that
+        table_row = "\t\t"+title+'\t'+desc+'\t'+ytid+'\t'+yt_url+'\t'+dur+'\t'+ka_url+'\n'
+        out_list.append(table_row)
 
 

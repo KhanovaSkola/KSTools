@@ -1,5 +1,5 @@
 # AmaraUpload
-Python script for uploading subtitles to Amara.
+Python scripts for work with Amara, Khan Academy and YouTube APIs.
 There are 3 modes of operation, depending on the source of the subtitles.
 You can get the subtitles from YouTube, or upload subtitles from a file, or copy subtitles between Amara videos.
 
@@ -8,7 +8,7 @@ The format of the input file depends on the mode of operation.
 
 =================================================================================================
 
-You need en Amara account. To authenticate, you need a Amara Api key and username.
+You need an Amara account. To authenticate, you need the Amara Api key and username.
 (see sample_credentials.txt) 
 Amara API can be found in Settins-->Account-->API Access (bottom-right corner)
 
@@ -31,7 +31,7 @@ For downloading subtitles from YouTube, you need the command-line tool youtube-d
 https://github.com/rg3/youtube-dl
 
 =================================================================================================
-To synchronize all KA videos from YouTube to Amara:
+To synchronize all KA videos subtitles from YouTube to Amara:
 
 1] Download the KA tree:
 	./download_KAtree.py

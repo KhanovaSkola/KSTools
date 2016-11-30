@@ -20,6 +20,11 @@ def check_video(video_url, amara_headers):
     except requests.HTTPError as e:
         eprint('Error for video',video_url)
         eprint(e,"in amara_api::check_video")
+        try:
+            eprint(r.json())
+        except:
+            # Catch exceprtion when r.json is empty
+            pass
         sys.exit(1)
 
     return json_response
@@ -39,6 +44,11 @@ def add_video(video_url, video_lang, amara_headers):
     except requests.HTTPError as e:
         eprint('ERROR for video',video_url)
         eprint(e,"in amara_api::add_video")
+        try:
+            eprint(r.json())
+        except:
+            # Catch exceprtion when r.json is empty
+            pass
         if EXIT_ON_HTTPERROR:
             sys.exit(1)
         else:
