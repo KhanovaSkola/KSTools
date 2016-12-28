@@ -32,7 +32,7 @@ def check_video(video_url, amara_headers):
 
 def add_video(video_url, video_lang, amara_headers):
     url = AMARA_BASE_URL + 'api/videos/'
-    body = { 
+    body = {
         'video_url': video_url,
         'primary_audio_language_code': video_lang
         }
@@ -189,4 +189,23 @@ def compare_videos(amara_id1, amara_id2, amara_headers):
             sys.exit(1)
 
 
+def add_primary_audio_lang(amara_id, video_lang, amara_headers):
+    url = AMARA_BASE_URL + 'api/videos/'+amara_id+'/'
+    body = { 
+        'primary_audio_language_code': video_lang
+        }
+    
+    try:
+        r = requests.put(url, data=json.dumps(body), headers=amara_headers )
+        r.raise_for_status()
+        json_response = r.json()
+    except requests.HTTPError as e:
+        eprint('ERROR for video',video_url)
+        eprint(e,"in amara_api::add_primary_video_lang")
+        if EXIT_ON_HTTPERROR:
+            sys.exit(1)
+        else:
+            return {}
+
+    return json_response
 
