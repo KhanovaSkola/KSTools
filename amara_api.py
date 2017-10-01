@@ -4,7 +4,7 @@ import requests
 from pprint import pprint
 from utils import *
 
-AMARA_BASE_URL = 'https://www.amara.org/'
+AMARA_BASE_URL = 'https://amara.org/'
 EXIT_ON_HTTPERROR  = False
 
 
@@ -82,8 +82,10 @@ def check_language(amara_id, lang, amara_headers, url=0):
     body = {
             "limit": 10
             }
+
     if url == 0:
         url = AMARA_BASE_URL+'/api/videos/'+amara_id+'/languages/'
+
     try:
         r = requests.get(url,params=body, headers=amara_headers )
         r.raise_for_status()
@@ -98,13 +100,13 @@ def check_language(amara_id, lang, amara_headers, url=0):
             is_lang_present = True
             sub_version = len(obj['versions'])
             break
+
+    # Paginated output if there are many languages
+    next = json_response['meta']['next']
     
     if is_lang_present == False and next != None:
-        return check_language(amara_id, lang, amara_headers, url= r.json()["meta"]["next"])
+        return check_language(amara_id, lang, amara_headers, url= next)
     else:
-        # DH temporary, print number of languages
-        with open("numlang.dat","a") as f:
-            f.write(str(json_response["meta"]["total_count"])+'\n')
         return (is_lang_present, sub_version)
 
 
