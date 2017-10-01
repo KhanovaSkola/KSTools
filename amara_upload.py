@@ -8,7 +8,7 @@ from utils import answer_me
 
 # We suppose that the uploaded subtitles are complete (non-critical)
 is_complete = True # do we upload complete subtitles?
-sub_format = 'ttml'
+sub_format = 'vtt'
 
 def read_cmd():
    """Function for reading command line options."""
@@ -99,7 +99,6 @@ for i in range(len(ytids)):
 
 #   PART 1: GETTING THE SUBTITLES 
     if opts.yt == True:
-        print("Language "+lang+" is already present in Amara video id:"+amara_id)
         ytdownload = 'youtube-dl --sub-lang '+lang+ \
         ' --sub-format '+sub_format+' --write-sub --skip-download '+ video_url_from
     
@@ -189,7 +188,7 @@ for i in range(len(ytids)):
     # First check, whether subtitles for a given language are present,
     # then upload subtitles
     is_present, sub_version = check_language(amara_id, lang, amara_headers)
-    if is_present:
+    if is_present and int(sub_version) != "0":
         print("Language "+lang+" is already present in Amara video id:"+amara_id)
         print("Subtitle revision number: "+str(sub_version))
         # currently we do not support always_rewrite option
@@ -203,7 +202,7 @@ for i in range(len(ytids)):
         r = add_language(amara_id, lang, is_original, amara_headers)
 
     r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers)
-    if r['version_no'] == sub_version+1:
+    if r['version_no'] == int(sub_version)+1:
         print('Succesfully uploaded subtitles to: '+r['site_uri'])
     else:
         print("This is weird. Something probably went wrong during upload.")

@@ -66,8 +66,8 @@ for i in range(len(ytids)):
         #print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
         print("Video not on Amara!",ytid_from)
     else:
-        amara_id =  amara_response['objects'][0]['id']
-        amara_title =  amara_response['objects'][0]['title']
-        #print(AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
-        print(amara_id)
+        amara_id = amara_response['objects'][0]['id']
+        amara_title = amara_response['objects'][0]['title']
+        print(amara_id,'\t',AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
+        #print(amara_id)
 

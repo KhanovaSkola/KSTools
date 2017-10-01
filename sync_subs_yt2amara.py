@@ -130,7 +130,9 @@ for i in range(len(ytids)):
             if lg["code"] == lang:
                 lang_present = True
                 # lang could be there, but with no revisions
-                if lg["visible"] == True:
+                lang_visible = False
+                pprint(lg)
+                if 'visible' in lg and lg["visible"] == True:
                     lang_visible = True
                 break
 #       lang_present, sub_version = check_language(amara_id, lang, amara_headers)
@@ -172,7 +174,7 @@ for i in range(len(ytids)):
     fname = out.decode('UTF-8').split('Writing video subtitles to: ')
     if len(fname) < 2:
        print("ERROR: Requested subtitles were not found on YouTube. ", ytid_from)
-       missing++
+       missing += 1
        with open("failed_yt.dat","a") as f:
            f.write(ytid_from+'\n')
        continue
@@ -200,11 +202,11 @@ for i in range(len(ytids)):
 #    if r['version_no'] == sub_version+1:
     else:
         print('Succesfully uploaded subtitles: ',ytid_from)
-        uploaded++
+        uploaded += 1
         f_vids.write(ytid_from+'\n')
 
 
-print("(:Aaand we are finished!:)")
+print("(:And we are finished!:)")
 print(USERNAME+" have succesfuly uploaded ",uploaded, " videos.")
 print(missing," videos are missing subtitles")
 

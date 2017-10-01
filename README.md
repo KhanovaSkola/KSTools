@@ -45,3 +45,5 @@ If you need to connect via proxy server, the easiest thing to do on Linux is to 
 If you have BASH:
 
 $ export HTTPS_PROXY="http://your_proxy.com:3128"
+
+https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
