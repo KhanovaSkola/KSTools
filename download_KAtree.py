@@ -4,28 +4,24 @@ from utils import *
 import argparse, sys
 import time
 
-#YTID1='Pk4d9lY48GI'
-#response = kapi_check_video(YTID1)
-#pprint(response)
-#topic = "cc-early-math-add-sub-basics"
-#tree = kapi_download_topic(topic)
 
-# TODO: parse input from command line
 def read_cmd():
    """Function for reading command line options."""
    desc = "Program for downloading and printing Khan Academy content tree." 
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('-d','--download',dest='download',default=False,action="store_true", help='Download most up-to-date full tree?')
-   parser.add_argument('-s','--subject', dest='subject', default=None, help='Print full tree for a given subject')
-   parser.add_argument('-c','--content', dest='content', default="all", help='Which kind of content should we download? Options: Video|Exercise|Article|Topic')
+   parser.add_argument('-s','--subject', dest='subject', default=None, help='Print full tree for a given domain/subject.')
+   parser.add_argument('-c','--content', dest='content', default="all", help='Which kind of content should we download? Options: video|exercise|article|topic')
+   parser.add_argument('-l','--list', dest='list', default=False,action="store_true", help='Only list topic names within given domain/subject/topic.')
    return parser.parse_args()
 
 opts = read_cmd()
 download = opts.download
 subject  = opts.subject
-what = opts.content
-what = what.lower()
+what = opts.content.lower()
+lst = opts.list
 
+# Currently, article type does not seem to work.
 content_types = ["video", "article", "exercise", "topic","all"]
 
 if what not in content_types:
@@ -53,24 +49,48 @@ if  what == 'video' or what == 'all':
         for v in videos:
             out.write(v)
 
+if lst and subject == 'root':
+    for child in tree["children"]:
+        pprint(child['title'])
+    exit(0)
 
+# Mapping KA tree to subjects
+ind_math = 0
+ind_science = 1
+ind_chem = 5
+ind_org = 7
+ind_phys = 0
+ind_bio = 8
+ind_partner = 7
+ind_CC = 24
+subjects = {
+    'science' : tree["children"][ind_science],
+    'biology' : tree["children"][ind_science]['children'][ind_bio],
+    'physics' : tree["children"][ind_science]['children'][ind_phys],
+    'chemistry' : tree["children"][ind_science]['children'][ind_chem],
+    'organic_chemistry' : tree["children"][ind_science]['children'][ind_org],
+    'math'  : tree["children"][ind_math],
+    'early_math'  : tree["children"][ind_math]["children"][5],
+    'arithmetic' : tree["children"][ind_math]["children"][23],
+    'partner' : tree["children"][ind_partner],
+    'CC' : tree["children"][ind_partner]["children"][ind_CC],
+}
+
+# Order of topics in Topic Tree often changes
+# The following is helpfull to determine where things are
+if lst:
+    if subject not in subjects:
+        for child in tree["children"]:
+            pprint(child['title'])
+    else:
+        for child in subjects[subject]['children']:
+            pprint(child['title'])
+    exit(0)
 
 # Making large table of data for a given subject
 if subject is not None:
     content = []
 
-# Mapping KA tree to subjects
-    subjects = {
-        'science' : tree["children"][2],
-        'biology' : tree["children"][2]['children'][0],
-        'physics' : tree["children"][2]['children'][1],
-        'chemistry' : tree["children"][2]['children'][2],
-        'astronomy' : tree["children"][2]['children'][3],
-        'medicine' : tree["children"][2]['children'][4],
-        'electrical' : tree["children"][2]['children'][5],
-        'organic_chemistry' : tree["children"][2]['children'][6],
-        'math'  : tree["children"][1] # I think
-    }
 
     if subject not in subjects:
         print("ERROR: I do not know subject ", subject)
@@ -83,6 +103,5 @@ if subject is not None:
     with open(filename,"w") as f:
         for c in content:
             f.write(c)
-
 
 
