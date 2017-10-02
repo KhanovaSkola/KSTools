@@ -19,8 +19,8 @@ sub_format2 = "srt"
 
 def read_cmd():
    """Function for reading command line options."""
-   desc = "Program for syncing subtitles from YouTube to Amara. \
-           Aimed for large numbers, should be faster then script amara_upload."
+   desc = "Program for syncing subtitles from YouTube to Amara.\n \
+           Optimized for larger number of subs, should be faster than script amara_upload."
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs in the first column.')
    parser.add_argument('-l','--lang',dest='lang',default = "en", help='Which language do we copy?')
@@ -28,7 +28,6 @@ def read_cmd():
    parser.add_argument('-v','--verbose',dest='verbose',default=False,action="store_true", help='More verbose output.')
    parser.add_argument('--skip-errors', dest='skip', default=True, action="store_true", help='[default]Should I skip subtitles that could not be downloaded? \
          The list of failed YTID\' will be printed to \"failed_yt.dat\".')
-   parser.add_argument('--no-rewrite', dest='rewrite', default=False, action="store_false", help='[default]Never rewrite existing subtitles on upload!')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -37,6 +36,7 @@ apifile = opts.apifile
 lang = opts.lang
 
 # We suppose that the original language is English
+original_video_lang = "en"
 if lang == "en": 
     is_original = True # is lang the original language of the video?
 else:
@@ -130,10 +130,10 @@ for i in range(len(ytids)):
             if lg["code"] == lang:
                 lang_present = True
                 # lang could be there, but with no revisions
-                lang_visible = False
-                pprint(lg)
-                if 'visible' in lg and lg["visible"] == True:
-                    lang_visible = True
+                # this key was retired from API
+                lang_visible = True
+                #if lg["visible"] == True:
+                #    lang_visible = True
                 break
 #       lang_present, sub_version = check_language(amara_id, lang, amara_headers)
         if lang_present and lang_visible:
@@ -144,7 +144,7 @@ for i in range(len(ytids)):
 
     # Moved this here due to large number of Amara errors...
     if not video_present:
-        amara_response = add_video(video_url_to, lang, amara_headers)
+        amara_response = add_video(video_url_to, original_video_lang, amara_headers)
         if "id" in amara_response:
             amara_id = amara_response['id']
             amara_title =  amara_response['title']
