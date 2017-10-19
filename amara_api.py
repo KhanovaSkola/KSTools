@@ -7,40 +7,44 @@ from utils import *
 AMARA_BASE_URL = 'https://amara.org/'
 EXIT_ON_HTTPERROR  = False
 
+# Additional parameter 's' is the request Session object
+# which maintains persistent connection
+# http://docs.python-requests.org/en/master/user/advanced/
 
-def check_video(video_url, amara_headers):
-    url = AMARA_BASE_URL + 'api/videos/'
-    body = { 
-        'video_url': video_url
-        }
+def my_get(url, body, amara_headers, session=None):
     try:
-        r = requests.get(url, params=body, headers=amara_headers )
+        if session is None:
+            r = requests.get(url, params=body, headers=amara_headers )
+        else:
+            r = session.get(url, params=body, headers=amara_headers )
+
         r.raise_for_status()
-        json_response = r.json()
+        return r.json()
+
     except requests.HTTPError as e:
-        eprint('Error for video',video_url)
-        eprint(e,"in amara_api::check_video")
+        eprint('Error for video',url)
+        eprint(e)
         try:
             eprint(r.json())
         except:
-            # Catch exceprtion when r.json is empty
+            # Catch exception when r.json is empty
             pass
-        sys.exit(1)
+        if EXIT_ON_HTTPERROR:
+            sys.exit(1)
+        else:
+            return {}
 
-    return json_response
 
-
-def add_video(video_url, video_lang, amara_headers):
-    url = AMARA_BASE_URL + 'api/videos/'
-    body = {
-        'video_url': video_url,
-        'primary_audio_language_code': video_lang
-        }
-    
+def my_post(url, body, amara_headers, session=None):
     try:
-        r = requests.post(url, data=json.dumps(body), headers=amara_headers )
+        if session is None:
+            r = requests.post(url, data=json.dumps(body), headers=amara_headers )
+        else:
+            r = session.post(url, data=json.dumps(body), headers=amara_headers )
+
         r.raise_for_status()
-        json_response = r.json()
+        return r.json()
+
     except requests.HTTPError as e:
         eprint('ERROR for video',video_url)
         eprint(e,"in amara_api::add_video")
@@ -54,10 +58,31 @@ def add_video(video_url, video_lang, amara_headers):
         else:
             return {}
 
+
+def check_video(video_url, amara_headers, s=None):
+    url = AMARA_BASE_URL + 'api/videos/'
+    body = { 
+        'video_url': video_url
+        }
+
+    json_response = my_get(url, body, amara_headers, session=s)
+
     return json_response
 
 
-def add_language(amara_id, lang, is_original, amara_headers):
+def add_video(video_url, video_lang, amara_headers, s=None):
+    url = AMARA_BASE_URL + 'api/videos/'
+    body = {
+        'video_url': video_url,
+        'primary_audio_language_code': video_lang
+        }
+    
+    json_response = my_post(url, body, amara_headers, session=s)
+
+    return json_response
+
+
+def add_language(amara_id, lang, is_original, amara_headers, s=None):
 
     url = AMARA_BASE_URL + 'api/videos/'+amara_id+'/languages/'
     body = { 
@@ -65,18 +90,13 @@ def add_language(amara_id, lang, is_original, amara_headers):
         'subtitles_complete': False,  # To be uploaded later
         'is_primary_audio_language': is_original
         }
-    try:
-        r= requests.post(url, data=json.dumps(body), headers=amara_headers )
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        eprint(e,"in amara_api::add_language")
-        sys.exit(1)
+
+    json_response = my_get(url, body, amara_headers, session=s)
 
     return json_response
 
 
-def check_language(amara_id, lang, amara_headers, url=0):
+def check_language(amara_id, lang, amara_headers, s=None, url=0):
     is_lang_present = False
     sub_version = 0
     body = {
@@ -86,14 +106,7 @@ def check_language(amara_id, lang, amara_headers, url=0):
     if url == 0:
         url = AMARA_BASE_URL+'api/videos/'+amara_id+'/languages/'
 
-    try:
-        r = requests.get(url,params=body, headers=amara_headers)
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        eprint(e,"in amara_api::check_language")
-        eprint(url)
-        sys.exit(1)
+    json_response = my_get(url, body, amara_headers, session=s)
 
     for obj in json_response['objects']:
         if obj['language_code'] == lang:
@@ -107,12 +120,12 @@ def check_language(amara_id, lang, amara_headers, url=0):
     if is_lang_present == False and next != None:
         print ("Halo from paginated input")
         print(next)
-        return check_language(amara_id, lang, amara_headers, url= next)
+        return check_language(amara_id, lang, amara_headers, s=s, url= next)
     else:
         return (is_lang_present, sub_version)
 
 
-def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers):
+def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers,s=None):
     url = AMARA_BASE_URL + 'api/videos/'+amara_id+'/languages/'+lang+'/subtitles/'
     body = { 
         'subtitles': subs,
@@ -121,13 +134,8 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers):
         'is_complete': is_complete,   # Warning, this is deprecated
         #'action': "Publish"
         }
-    try:
-        r = requests.post(url, data=json.dumps(body), headers=amara_headers )
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        eprint(e,"in amara_api::upload_subs")
-        sys.exit(1)
+
+    json_response = my_post(url, body, amara_headers, session=s)
 
     return json_response
 
@@ -158,6 +166,7 @@ def download_subs(amara_id, lang, sub_format, amara_headers ):
             sys.exit(1)
 
     return r.text
+
 
 def compare_videos(amara_id1, amara_id2, amara_headers):
     url1 = AMARA_BASE_URL+'api/videos/'+amara_id1
@@ -193,14 +202,17 @@ def compare_videos(amara_id1, amara_id2, amara_headers):
             sys.exit(1)
 
 
-def add_primary_audio_lang(amara_id, video_lang, amara_headers):
+def add_primary_audio_lang(amara_id, video_lang, amara_headers, session=None):
     url = AMARA_BASE_URL + 'api/videos/'+amara_id+'/'
     body = { 
         'primary_audio_language_code': video_lang
         }
     
     try:
-        r = requests.put(url, data=json.dumps(body), headers=amara_headers )
+        if session is None:
+            r = requests.put(url, data=json.dumps(body), headers=amara_headers )
+        else:
+            r = session.put(url, data=json.dumps(body), headers=amara_headers )
         r.raise_for_status()
         json_response = r.json()
     except requests.HTTPError as e:

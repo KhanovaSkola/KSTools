@@ -96,6 +96,10 @@ print("Current number of skipped videos on Amara:", len(ytid_skip))
 
 uploaded = 0
 
+# create persistent session with Amara
+am_ses = requests.Session()
+
+
 # Main loop
 for i in range(len(ytids)):
     video_present = False
@@ -116,7 +120,7 @@ for i in range(len(ytids)):
     f_vids.flush()
 
 #   Check whether video is there
-    amara_response = check_video( video_url_to, amara_headers)
+    amara_response = check_video( video_url_to, amara_headers, s=am_ses)
     if amara_response['meta']['total_count'] == 0:
         video_present = False
         lang_present  = False
@@ -144,7 +148,7 @@ for i in range(len(ytids)):
 
     # Moved this here due to large number of Amara errors...
     if not video_present:
-        amara_response = add_video(video_url_to, original_video_lang, amara_headers)
+        amara_response = add_video(video_url_to, original_video_lang, amara_headers, s=am_ses)
         if "id" in amara_response:
             amara_id = amara_response['id']
             amara_title =  amara_response['title']
@@ -189,10 +193,10 @@ for i in range(len(ytids)):
 #   PART 3: Creating language on Amara
 
     if not lang_present:
-        r = add_language(amara_id, lang, is_original, amara_headers)
+        r = add_language(amara_id, lang, is_original, amara_headers, s=am_ses)
 
 #   PART 4: UPLOADING THE SUBTITLES 
-    r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers)
+    r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers, s=am_ses)
     if not 'version_no' in r:
         print('ERROR: when uploading subs to Amara:',ytid_from)
         epprint(ytid_from)
