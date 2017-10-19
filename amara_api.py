@@ -84,10 +84,10 @@ def check_language(amara_id, lang, amara_headers, url=0):
             }
 
     if url == 0:
-        url = AMARA_BASE_URL+'/api/videos/'+amara_id+'/languages/'
+        url = AMARA_BASE_URL+'api/videos/'+amara_id+'/languages/'
 
     try:
-        r = requests.get(url,params=body, headers=amara_headers )
+        r = requests.get(url,params=body, headers=amara_headers)
         r.raise_for_status()
         json_response = r.json()
     except requests.HTTPError as e:
@@ -105,6 +105,8 @@ def check_language(amara_id, lang, amara_headers, url=0):
     next = json_response['meta']['next']
     
     if is_lang_present == False and next != None:
+        print ("Halo from paginated input")
+        print(next)
         return check_language(amara_id, lang, amara_headers, url= next)
     else:
         return (is_lang_present, sub_version)
@@ -131,7 +133,7 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers):
 
 
 def download_subs(amara_id, lang, sub_format, amara_headers ):
-    url = AMARA_BASE_URL+'/api/videos/'+amara_id+'/languages/'+lang+'/subtitles/?format='+sub_format
+    url = AMARA_BASE_URL+'api/videos/'+amara_id+'/languages/'+lang+'/subtitles/?format='+sub_format
     body = { 
         'language_code': lang,
         'video-id': amara_id
