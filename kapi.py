@@ -3,7 +3,8 @@ import json, sys
 import requests 
 from pprint import pprint
 
-SERVER_URL = 'http://www.khanacademy.org'
+#SERVER_URL = 'http://bg.khanacademy.org'
+SERVER_URL = 'http://khanacademy.org'
 TP_URL = 'https://www.khanacademy.org/translations/edit/cs/'
 DEFAULT_API_RESOURCE = '/api/v1/'
 # Version 2 is not documented, here used only for topic tree
@@ -88,7 +89,7 @@ def kapi_download_topictree(what='all'):
         with open(etagfile, "w") as f:
             f.write(r.headers["etag"])
     else:
-#        print("Etag not found in response header.")
+        print("Etag not found in response header.")
         pass
 
     return json_response
