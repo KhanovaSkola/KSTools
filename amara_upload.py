@@ -26,16 +26,16 @@ def read_cmd():
    parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
    parser.add_argument('--skip-errors', dest='skip', default=False, action="store_true", help='Should I skip subtitles that could not be downloaded? \
          The list of failed YTID\' will be printed to \"failed_yt.dat\".')
-#   parser.add_argument('--rewrite', dest='always_rewrite', default=False, action="store_true", help='Automatically rewrite existing subtitles on upload. Use with extreme care!')
-   parser.add_argument('--no-rewrite', dest='rewrite', action="store_false", help='Never rewrite existing subtitles on upload!')
+   parser.add_argument('--rewrite', dest='always_rewrite', action="store_true", help='Always rewrite existing subtitles on upload. Use with extreme care')
+   parser.add_argument('--no-rewrite', dest='never_rewrite', action="store_false", help='Never rewrite existing subtitles on upload.')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
 apifile = opts.apifile
 lang = opts.lang
-never_rewrite = not opts.rewrite
-#always_rewrite = opts.always_rewrite
+never_rewrite  = not opts.never_rewrite
+always_rewrite = opts.always_rewrite
 
 # We suppose that the original language is English
 if lang == "en": 
@@ -200,6 +200,7 @@ for i in range(len(ytids)):
 
     # When copying between 2 Amara videos, make sure that they have the same length
     # If not, ask the user whether to proceed anyway (might screw up the subs timing)
+
     if opts.amara == True:
         compare_videos(amara_id_from, amara_id, amara_headers, s=ses)
 
@@ -209,9 +210,10 @@ for i in range(len(ytids)):
     if is_present and int(sub_version) != "0":
         print("Language "+lang+" is already present in Amara video id:"+amara_id)
         print("Subtitle revision number: "+str(sub_version))
-        # currently we do not support always_rewrite option
         if never_rewrite:
            answer = False
+        elif always_rewrite:
+           answer = True
         else:
            answer = answer_me("Should I upload the subtitles anyway?")
         if not answer:

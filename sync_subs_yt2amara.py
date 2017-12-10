@@ -23,8 +23,9 @@ def read_cmd():
            Optimized for larger number of subs, should be faster than script amara_upload."
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs in the first column.')
-   parser.add_argument('-l','--lang',dest='lang',default = "en", help='Which language do we copy?')
    parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
+   parser.add_argument('-l','--lang',dest='lang',default = "en", help='Which language do we copy?')
+   parser.add_argument('-r','--rewrite',dest='rewrite',default=False,action="store_true", help='Rewrite subs on Amara.')
    parser.add_argument('-v','--verbose',dest='verbose',default=False,action="store_true", help='More verbose output.')
    parser.add_argument('--skip-errors', dest='skip', default=True, action="store_true", help='[default]Should I skip subtitles that could not be downloaded? \
          The list of failed YTID\' will be printed to \"failed_yt.dat\".')
@@ -57,7 +58,7 @@ API_KEY, USERNAME = file.read().split()[0:]
 print('# Using Amara username: '+USERNAME)
 #print('Using Amara API key: '+API_KEY)
 
-call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
+call("rm -f youtubedl.err youtubedl.out", shell=True)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -86,7 +87,7 @@ print("Current number of videos on Amara with subtitles in "+lang+" is:", len(yt
 # Skip certain videos
 ytid_skip = set()
 try:
-    with open("skip_videos.dat","r") as f:
+    with open("skip_videos."+lang+".dat","r") as f:
         for l in f:
             ytid_skip.add(l.split()[0])
 except:
@@ -95,9 +96,11 @@ except:
 print("Current number of skipped videos on Amara:", len(ytid_skip))
 
 uploaded = 0
+missing = 0
 
 # create persistent session with Amara
 am_ses = requests.Session()
+f_failed_yt = "failed_download_yt."+lang+".dat"
 
 
 # Main loop
@@ -111,8 +114,10 @@ for i in range(len(ytids)):
     video_url_to = 'https://www.youtube.com/watch?v='+ytid_from
 
 #   PART 1: Checking the existence of subtitles on Amara
-#   If present, we do nothing
-    if ytid_from in ytid_exist or ytid_from in ytid_skip:
+    if ytid_from in ytid_skip:
+        continue
+
+    if ytid_from in ytid_exist and not opts.rewrite:
         continue
 
     sys.stdout.flush()
@@ -128,8 +133,6 @@ for i in range(len(ytids)):
         video_present = True
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
-        # We don't really need check_language() here
-        # This also avoids some API errors
         for lg in amara_response['objects'][0]['languages']:
             if lg["code"] == lang:
                 lang_present = True
@@ -139,12 +142,13 @@ for i in range(len(ytids)):
                 #if lg["visible"] == True:
                 #    lang_visible = True
                 break
-#       lang_present, sub_version = check_language(amara_id, lang, amara_headers)
-        if lang_present and lang_visible:
+        lang_present, sub_version = check_language(amara_id, lang, amara_headers)
+        if lang_present and lang_visible and sub_version > 0:
             f_vids.write(ytid_from+'\n')
             if opts.verbose:
                 print("Subtitles already present for video YTID: ", ytid_from )    
-            continue
+            if not opts.rewrite:
+                continue
 
     # Moved this here due to large number of Amara errors...
     if not video_present:
@@ -172,14 +176,16 @@ for i in range(len(ytids)):
     if err:
         with open("youtubedl.err", "a") as f:
             f.write(err.decode('UTF-8'))
-        print("ERROR: during downloading subs:", ytid_from)
-        continue
+        if opts.verbose:
+            print("WARNING during downloading subtitles for YTID=", ytid_from)
+            print("Check file "+f_failed_yt)
+        #continue
 
     fname = out.decode('UTF-8').split('Writing video subtitles to: ')
     if len(fname) < 2:
        print("ERROR: Requested subtitles were not found on YouTube. ", ytid_from)
        missing += 1
-       with open("failed_yt.dat","a") as f:
+       with open(f_failed_yt,"a") as f:
            f.write(ytid_from+'\n')
        continue
 
@@ -205,13 +211,13 @@ for i in range(len(ytids)):
     # this is not possible here, we dont have sub_version
 #    if r['version_no'] == sub_version+1:
     else:
-        print('Succesfully uploaded subtitles: ',ytid_from)
+        print('Succesfully uploaded subtitles for YTID=',ytid_from," AmaraID=",amara_id)
         uploaded += 1
         f_vids.write(ytid_from+'\n')
 
 
 print("(:And we are finished!:)")
 print(USERNAME+" have succesfuly uploaded ",uploaded, " videos.")
-print(missing," videos are missing subtitles")
+print(missing," videos on YT are missing subtitles")
 
 

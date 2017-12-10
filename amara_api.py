@@ -118,8 +118,6 @@ def check_language(amara_id, lang, amara_headers, s=None, url=0):
     next = json_response['meta']['next']
     
     if is_lang_present == False and next != None:
-        print ("Halo from paginated input")
-        print(next)
         return check_language(amara_id, lang, amara_headers, s=s, url= next)
     else:
         return (is_lang_present, sub_version)
@@ -140,7 +138,7 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers,s=N
     return json_response
 
 
-def download_subs(amara_id, lang, sub_format, amara_headers ):
+def download_subs(amara_id, lang, sub_format, amara_headers, s=None):
     url = AMARA_BASE_URL+'api/videos/'+amara_id+'/languages/'+lang+'/subtitles/?format='+sub_format
     body = { 
         'language_code': lang,
@@ -168,26 +166,26 @@ def download_subs(amara_id, lang, sub_format, amara_headers ):
     return r.text
 
 
-def compare_videos(amara_id1, amara_id2, amara_headers):
-    url1 = AMARA_BASE_URL+'api/videos/'+amara_id1
-    url2 = AMARA_BASE_URL+'api/videos/'+amara_id2
+def compare_videos(amara_id1, amara_id2, amara_headers, s = None):
+    url1 = AMARA_BASE_URL+'api/videos/'+amara_id1+'/'
+    url2 = AMARA_BASE_URL+'api/videos/'+amara_id2+'/'
+
+    body = { 
+        }
 
     try:
-        r = requests.get(url1, headers=amara_headers )
-        r.raise_for_status()
-        len1 = r.json()['duration']
+        json_response = my_get(url1, body, amara_headers, session=s)
+        len1 = json_response['duration']
     except requests.HTTPError as e:
         eprint(e," in amara_api::compare_videos")
         sys.exit(1)
 
     try:
-        r = requests.get(url2, headers=amara_headers )
-        r.raise_for_status()
-        len2 = r.json()['duration']
+        json_response = my_get(url2, body, amara_headers, session=s)
+        len2 = json_response['duration']
     except requests.HTTPError as e:
         eprint(e," in amara_api::compare_videos")
         sys.exit(1)
-
 
     if len1 == len2:
         return True

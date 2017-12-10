@@ -9,6 +9,8 @@ exercise*txt
 article*txt
 dhbot_*
 SYNC/*
+DATA/*
+subs/*
 
 
 # Byte-compiled / optimized / DLL files

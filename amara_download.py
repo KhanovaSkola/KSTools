@@ -45,7 +45,9 @@ ytids = []
 # Reading file with YT id's
 with open(infile, "r") as f:
     for line in f:
-        ytids.append(line.split())
+        l = line.split()
+        if l[0][0] != "#":
+            ytids.append(line.split())
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)

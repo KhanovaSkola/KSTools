@@ -20,7 +20,7 @@ amara_api.py    	Collection of basic Amara API calls
 amara_upload.py     	Script for uploading subtitles to Amara.
 		Type './amara_upload.py -h' to get help.
 
-amara_download.py	Downloading subtitles from Amara.
+amara_download.py	Downloading subtitles from Amara or YouTube.
 
 kapi.py			Basic KA API calls.
 
@@ -34,7 +34,7 @@ https://github.com/rg3/youtube-dl
 To synchronize all KA videos subtitles from YouTube to Amara:
 
 1] Download the KA tree:
-	./download_KAtree.py
+	./download_KAtree.py -d
 
 2] Upload subtitles for a given language, that are on YouTube, but have no revision on Amara
 /usr/bin/time ../sync_subs_yt2amara.py -l en -c ../myapi_amara.txt allvideos_ids.dat > sync.log 2> sync.log.err &
@@ -47,3 +47,11 @@ If you have BASH:
 $ export HTTPS_PROXY="http://your_proxy.com:3128"
 
 https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
+
+
+# Syncing subtitles from Amara to YouTube in bulk
+./sync_subs_amara2yt.py -l cs -c DATA/myapi_amara.txt -g DATA/myapi_google.txt DATA/KS_allYTID.test.csv -d ';' -v -u
+
+https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
+
+https://console.developers.google.com/apis/credentials?project=khan-academy-youtube-subtitles
