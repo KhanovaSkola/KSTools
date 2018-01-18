@@ -23,8 +23,14 @@ amara_download.py	Downloading subtitles from Amara or YouTube.
 kapi.py			Basic KA API calls.
 
 map_ytid2amaraid.py     Produce links to Amara editor from list of YouTube IDs
+
 ---
 
+#### Dependencies
+
+ - Python 3
+ - youtube-dl
+ 
 For downloading subtitles from YouTube, you need the command-line tool youtube-dl.
 https://github.com/rg3/youtube-dl
 (note that this functionality is also implemented via YouTube API, but since it takes your API points
@@ -49,7 +55,7 @@ $ export HTTPS_PROXY="http://your_proxy.com:3128"
 https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
 
 
-# Syncing subtitles from Amara to YouTube in bulk
+### Syncing subtitles from Amara to YouTube in bulk
 ./sync_subs_amara2yt.py -l cs -c DATA/myapi_amara.txt -g DATA/myapi_google.txt DATA/KS_allYTID.test.csv -d ';' -v -u
 
 https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
