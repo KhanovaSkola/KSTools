@@ -19,9 +19,9 @@ logging.basicConfig()
 
 # Safety guard to prevent messing with other languages at KA
 #SAFE_MODE = True
-SAFE_MODE = True
+SAFE_MODE = False
 
-FORBIDDEN_FILE = "yt_upload_forbidden.dat"
+FORBIDDEN_FILE = "yt_upload_forbidden."
 
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
 
@@ -114,7 +114,8 @@ def upload_caption(youtube, video_id, language, name, is_draft, file):
       ##TODO: Check that we actually got 403
       print("Got the following error during sub upload, YTID=", video_id)
       print(e)
-      with open(FORBIDDEN_FILE, "a") as f:
+      fname = FORBIDDEN_FILE + language + ".dat"
+      with open(fname, "a") as f:
           f.write(video_id+"\n")
 
       return False
@@ -152,7 +153,8 @@ def update_caption(youtube,video_id, language, caption_id, is_draft, file):
       ##TODO: Check that we actually got 403
       print("Got the following error during sub update")
       print(e)
-      with open(FORBIDDEN_FILE, "a") as f:
+      fname = FORBIDDEN_FILE + language + ".dat"
+      with open(fname, "a") as f:
           # I really need to pass YTID here as well
           f.write(video_id+"\n")
       return False

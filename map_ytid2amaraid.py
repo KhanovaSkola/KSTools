@@ -67,6 +67,6 @@ for i in range(len(ytids)):
     else:
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
-        print(amara_id,'\t',AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
-        #print(amara_id)
+        #print(amara_id,'\t',AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
+        print(AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
 

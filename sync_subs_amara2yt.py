@@ -15,6 +15,8 @@ from oauth2client.tools import argparser, run_flow
 is_complete = True # do we upload complete subtitles?
 
 SAFE_MODE = True
+SUPPORTED_LANGUAGES = ["cs","bg","ko"]
+SUPPORTED_LANGUAGES = ["cs"]
 
 sub_format = 'vtt'
 sub_format2 = "srt"
@@ -58,8 +60,9 @@ else:
 
 print("# Syncing subtitles for language:", lang)
 
-if lang != 'cs' and SAFE_MODE:
-    print("ERROR: We do not support other languages besides Czech!")
+if lang not in SUPPORTED_LANGUAGES and SAFE_MODE:
+    print("ERROR: We do not support upload for language "+lang)
+    sys.exit(1)
 
 ytids = []
 # Reading file with YT id's
@@ -102,14 +105,17 @@ print("Current number of videos with subtitles on YT in "+lang+" is:", len(ytid_
 # Skip certain videos
 # This file is user created
 # you could e.g. copy file_missing to file_skip
-file_skip = "sync_amara2yt_skip."+lang+".dat"
+fname_skip = "sync_amara2yt_skip."+lang+".dat"
 ytid_skip = set()
 try:
-    with open(file_skip,"r") as f:
+    with open(fname_skip,"r") as f:
         for l in f:
             ytid_skip.add(l.split()[0])
+except FileNotFoundError as e:
+    print('WARNING: Could not read file ',fname_skip)
 except:
-    pass
+    print("Unexpected error:",  sys.exc_info()[0])
+    raise
 
 print("Current number of skipped videos on YouTube:", len(ytid_skip))
 
@@ -117,7 +123,9 @@ uploaded = 0
 
 
 fname_missing = "amarasubs_missing."+lang+".dat"
+fname_ytvid_missing = "ytvideo_missing.dat"
 f_capts_missing = open(fname_missing, "a")
+f_ytvid_missing = open(fname_ytvid_missing, "a")
 missing = []
 
 # create persistent session with Amara
@@ -142,8 +150,8 @@ for i in range(len(ytids)):
     if (ytid_from in ytid_exist and not opts.update) or ytid_from in ytid_skip:
         continue
 
-    if verbose:
-        print("Syncing YTID="+ytid_from)
+#    if verbose:
+    print("Syncing YTID="+ytid_from)
 
     sys.stdout.flush()
     sys.stderr.flush()
@@ -153,10 +161,13 @@ for i in range(len(ytids)):
 
     # For now, let's just crash if video is not on YT anymore
     # Helps to clean up the KS website
-    captions = ytapi.list_captions(youtube, ytid_from, verbose=False)
-    #except HttpError as e:
-    #    print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
-    #    exit(1)
+    try:
+        captions = ytapi.list_captions(youtube, ytid_from, verbose=False)
+    except:
+        print("An exception occurred during listing of YTID = %s:\n" % ytid_from)
+        print(sys.exc_info())
+        f_ytvid_missing.write(ytid_from+'\n')
+        continue
 
     captions_present = False
     for item in captions:
@@ -228,8 +239,9 @@ print(USERNAME+" have succesfuly uploaded ", uploaded, " videos.")
 
 f_capts_yt.close()
 f_capts_missing.close()
+f_ytvid_missing.close()
 
 if len(missing) != 0:
     print(len(missing)," videos are missing subtitles on Amara!")
-    print("YTIDs are listed in file ", file_missing)
+    print("Those YTIDs are listed in file ", fname_missing)
 

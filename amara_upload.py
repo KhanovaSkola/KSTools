@@ -163,9 +163,9 @@ for i in range(len(ytids)):
         else:
             amara_id_from =  amara_response['objects'][0]['id']
             amara_title =  amara_response['objects'][0]['title']
-            print("Copying "+lang+" subtitles from:")
+            print("Copying "+lang+" subtitles from YTID=", ytid_from)
             print("Title: "+amara_title)
-            print(AMARA_BASE_URL+'cs/videos/'+amara_id_from)
+            print(AMARA_BASE_URL+lang+'/videos/'+amara_id_from)
 
         # Check whether subtitles for a given language are present,
         is_present, sub_version = check_language(amara_id_from, lang, amara_headers, s=ses)
@@ -190,13 +190,13 @@ for i in range(len(ytids)):
         amara_title =  amara_response['title']
         print("Created video on Amara with Amara id "+amara_id)
         print("Title: "+amara_title)
-        print(AMARA_BASE_URL+'cs/videos/'+amara_id)
+        print(AMARA_BASE_URL+lang+'/videos/'+amara_id)
     else:
         amara_id =  amara_response['objects'][0]['id']
         amara_title =  amara_response['objects'][0]['title']
         print("Video with YTid "+ytid_to+" is already present on Amara")
         print("Title: "+amara_title)
-        print(AMARA_BASE_URL+'cs/videos/'+amara_id)
+        print(AMARA_BASE_URL+lang+'/videos/'+amara_id)
 
     # When copying between 2 Amara videos, make sure that they have the same length
     # If not, ask the user whether to proceed anyway (might screw up the subs timing)

@@ -50,7 +50,9 @@ https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api
 
 
 # Syncing subtitles from Amara to YouTube in bulk
-./sync_subs_amara2yt.py -l cs -c DATA/myapi_amara.txt -g DATA/myapi_google.txt DATA/KS_allYTID.test.csv -d ';' -v -u
+./sync_subs_amara2yt.py -l cs -c DATA/myapi_amara.txt DATA/KS_allYTID.test.csv -d ';' -u
+
+cat  ytvideo_missing.dat captions_on_yt.cs.dat yt_upload_forbidden.cs.dat amarasubs_missing.cs.dat >> sync_amara2yt_skip.cs.dat
 
 https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
 

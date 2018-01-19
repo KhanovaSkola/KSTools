@@ -86,12 +86,16 @@ print("Current number of videos on Amara with subtitles in "+lang+" is:", len(yt
 
 # Skip certain videos
 ytid_skip = set()
+fname_skip = "sync_yt2amara_skip."+lang+".dat"
 try:
-    with open("skip_videos."+lang+".dat","r") as f:
+    with open(fname_skip,"r") as f:
         for l in f:
             ytid_skip.add(l.split()[0])
+except FileNotFoundError as e:
+    print('WARNING: Could not read file ',fname_skip)
 except:
-    pass
+    print("Unexpected error:",  sys.exc_info()[0])
+    raise
 
 print("Current number of skipped videos on Amara:", len(ytid_skip))
 
