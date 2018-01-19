@@ -27,11 +27,34 @@ def load_tree(content):
         print("Possibilities are:", content_types)
 #        exit(0)
 
+def print_children_titles(content_tree):
+    for child in content_tree["children"]:
+       pprint(child['title'])
+
+def find_topic(tree, title):
+    if "children" not in tree.keys() or len(tree['children']) == 0:
+        return None
+    for c in tree['children']:
+        if c['title'] == title:
+            return c
+    # Breadth first search
+    for c in tree['children']:
+        result = find_topic(c, title)
+        if result is not None:
+           return result
+    # Depth first search
+    #    else:
+    #        result = find_topic(c, title)
+    #        if result is not None:
+    #            return result
+    return None
+
+
 if __name__ == "__main__":
 
     opts = read_cmd()
     download = opts.download
-    subject  = opts.subject
+    subject_title  = opts.subject
     what = opts.content.lower()
     lst = opts.list
 
@@ -39,7 +62,7 @@ if __name__ == "__main__":
     if what not in content_types:
         print("ERROR: content argument:", opts.content)
         print("Possibilities are:", content_types)
-        sys.exit(1)
+        exit(1)
 
     if download:
         tree = kapi_download_topictree(what)
@@ -61,67 +84,32 @@ if __name__ == "__main__":
             for v in videos:
                 out.write(v)
 
-    if lst and subject == 'root':
-        for child in tree["children"]:
-            pprint(child['title'])
-        exit(0)
 
-    if subject == 'root':
-        exit(0)
+    if subject_title == 'root':
+        subtree = tree
+    else:
+        subtree = find_topic(tree, subject_title)
 
-    # Mapping KA tree to subjects
-    ind_math = 0
-    ind_science = 1
-    ind_chem = 5
-    ind_org = 7
-    ind_phys = 0
-    ind_bio = 8
-    ind_partner = 7
-    ind_CC = 24
-
-    try:
-        subjects = {
-        'science' : tree["children"][ind_science],
-        'biology' : tree["children"][ind_science]['children'][ind_bio],
-        'physics' : tree["children"][ind_science]['children'][ind_phys],
-        'chemistry' : tree["children"][ind_science]['children'][ind_chem],
-        'organic_chemistry' : tree["children"][ind_science]['children'][ind_org],
-        'math'  : tree["children"][ind_math],
-        'early_math'  : tree["children"][ind_math]["children"][5],
-        'arithmetic' : tree["children"][ind_math]["children"][23],
-        'partner' : tree["children"][ind_partner],
-        'CC' : tree["children"][ind_partner]["children"][ind_CC],
-        }
-    except:
-        print("Failed to locate subjects!")
-        raise
-    
-    # Order of topics in Topic Tree often changes
-    # The following is helpfull to determine where things are
+    # The following is helpful to determine where things are
     if lst:
-        if subject not in subjects:
-            for child in tree["children"]:
-                pprint(child['title'])
+        if subtree is not None:
+            print_children_titles(subtree)
+            sys.exit(0)
         else:
-            for child in subjects[subject]['children']:
-                pprint(child['title'])
-        exit(0)
-    
-    # Making large table of data for a given subject
-    if subject is not None:
-        content = []
-    
-    
-        if subject not in subjects:
-            print("ERROR: I do not know subject ", subject)
+            print("ERROR: Could not find topic titled: "+subject_title)
             sys.exit(1)
     
-        date = time.strftime("%d%m%Y")
-        kapi_tree_print_full(subjects[subject], content)
+    # Making large table of data for a given subject
+    # Note that this unfortunately only work at the subject level,
+    # Not for e.g. individual topics or tutorials
+    # We should fix function kapi_tree_print_full to be more general
+    content = []
+    date = time.strftime("%d%m%Y")
+    
+    kapi_tree_print_full(subtree, content)
 
-    filename = what+"_"+subject+"_"+date+".txt"
+    filename = what+"_"+subject_title+"_"+date+".txt"
     with open(filename,"w") as f:
         for c in content:
             f.write(c)
-
 

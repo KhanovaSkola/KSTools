@@ -107,11 +107,13 @@ def kapi_tree_print_videoids(tree, out_set):
 
 
 def kapi_tree_print_full(tree, out_list):
+    delim = ';'
     if tree["kind"] == "Topic":
 
         if len(tree["children"]) <= 0:
             # This can happen if Topic includes only Exercises or Articles
             # Articles seems to be topics as well
+           out_list.append('\n')
            return
         for c in tree["children"]:
             if c['kind'] == "Topic":
@@ -120,9 +122,9 @@ def kapi_tree_print_full(tree, out_list):
                     #out_list.append(title+'\t'+c['description']+'\n')
                     # Dirty hack to align columns
                     if c['render_type'] == 'Tutorial' and out_list[-1][-1] == '\n':
-                        out_list.append('\t'+title+'\t')
+                        out_list.append(delim+title+delim)
                     else:
-                        out_list.append(title+'\t')
+                        out_list.append(title+delim)
             kapi_tree_print_full(c, out_list)
 
     else:
@@ -165,20 +167,20 @@ def kapi_tree_print_full(tree, out_list):
 
         # Dirty hack to make columns aligned
         if out_list[-1][-1] == '\n':
-            table_row = '\t\t'
+            table_row = delim+delim
         else:
             table_row = ''
 
-        table_row = table_row + title+'\t'+ka_url
+        table_row = table_row + title+delim+ka_url
 
         # For videos, add links to YouTube and video duration
         if tree["content_kind"] == "Video":
-            table_row = table_row + "\t"+ytid+'\t'+yt_url+'\t'+dur
+            table_row = table_row + delim + ytid + delim + yt_url + delim + dur
 
         # For exercises, add link to Translation Portal
         # Currently hard-coded for MATH, don't know how to generalize it :(
         if tree["content_kind"] == "Exercise":
-            tp_link = '\t'+TP_URL+'/math/'+tree['node_slug']
+            tp_link = delim+TP_URL+'/math/'+tree['node_slug']
             table_row = table_row + tp_link
 
         table_row = table_row + '\n'
