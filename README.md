@@ -1,4 +1,4 @@
-# AmaraUpload
+# KSTools
 Python scripts for work with Amara, Khan Academy and YouTube APIs.
 There are 3 modes of operation, depending on the source of the subtitles.
 You can get the subtitles from YouTube, or upload subtitles from a file, or copy subtitles between Amara videos.
@@ -6,12 +6,26 @@ You can get the subtitles from YouTube, or upload subtitles from a file, or copy
 The format of the input file depends on the mode of operation.
 (see sample_input.txt)
 
+TODO: Make documentation for Khan Academy API
+
 ---
+#### Dependencies
+
+ - Python 3
+ - youtube-dl
+ 
+For downloading subtitles from YouTube, you need the command-line tool youtube-dl.
+https://github.com/rg3/youtube-dl
+(note that this functionality is also implemented via YouTube API, but since it takes your API points
+it is better to use youtube-dl for larger operations)
+
 You need an Amara account. To authenticate, you need the Amara Api key and username.
 (see sample_credentials.txt) 
 Amara API can be found in Settins-->Account-->API Access (bottom-right corner)
 
 ---
+### Source code
+
 amara_api.py    	Collection of basic Amara API calls
 
 
@@ -23,18 +37,6 @@ amara_download.py	Downloading subtitles from Amara or YouTube.
 kapi.py			Basic KA API calls.
 
 map_ytid2amaraid.py     Produce links to Amara editor from list of YouTube IDs
-
----
-
-#### Dependencies
-
- - Python 3
- - youtube-dl
- 
-For downloading subtitles from YouTube, you need the command-line tool youtube-dl.
-https://github.com/rg3/youtube-dl
-(note that this functionality is also implemented via YouTube API, but since it takes your API points
-it is better to use youtube-dl for larger operations)
 
 ---
 To synchronize all KA videos subtitles from YouTube to Amara:
@@ -51,8 +53,6 @@ If you need to connect via proxy server, the easiest thing to do on Linux is to 
 If you have BASH:
 
 $ export HTTPS_PROXY="http://your_proxy.com:3128"
-
-https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
 
 
 ### Syncing subtitles from Amara to YouTube in bulk
