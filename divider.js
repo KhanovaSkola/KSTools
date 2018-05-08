@@ -3,10 +3,10 @@ Divider.translateHint = function(locale, string) {
     if (locale === 'en')
         return string;
     
-    //TODO(danielhollas): i18n: Add missing strings for decimals
+    //TODO(danielhollas): i18n: \\text{} markup should be outside of this function. Or Maybe add it automatically to the input string? Probably not.
     var stringTranslations = {
         ' with a remainder of ': {
-            'cs': ' se zbytkem '    
+            'cs': ' se zbytkem '
         },
         
         'The remainder is 0, so we have our answer.': {
@@ -17,12 +17,31 @@ Divider.translateHint = function(locale, string) {
             'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}'
         },
         
-        '\\text{R}': {
+        'R': { // as in 'Remainder'
             'cs': '\\text{zb. }\~\~'
         },
         
         '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
             'cs' : "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}"
+        },
+        
+        'Write in a decimal and a zero.': {
+            'cs': 'Napiš desetinnou čárku a nulu.'
+        },
+        
+        "Shift the decimal 1 to the right.": {
+            'cs': 'TODO-cs: Untranslated'
+        },
+        "Shift the decimal %(num)s to the right.": {
+            'cs': 'TODO-cs: Untranslated'
+        },
+        
+        "Bring the decimal up into the": {
+            'cs': 'TODO-cs: Untranslated'
+        },
+        
+        "answer (the quotient).": {
+            'cs': 'TODO-cs: Untranslated'
         }
     };
     
@@ -97,7 +116,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         // Calculate the x-coordinate for the hints
         // DH EDIT: We need to account for the equal sign
         // and we also need to account for the fact that we switched the
-        // position of divisor and dividend...that's gonna be tough
+        // position of divisor and dividend
         
         dx = decimalsAdded + Math.max(0, deciDiff) + 0.5;
         var dxSmall = 0;
@@ -189,8 +208,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         this.clearArray(decimals);
 
         temporaryLabel = graph.label([dx, 1],
-            $.ngettext("\\text{Shift the decimal 1 to the right.}",
-                       "\\text{Shift the decimal %(num)s to the right.}",
+            $.ngettext("\\text{" + Divider.translateHint(locale, "Shift the decimal 1 to the right.")+"}",
+                       "\\text{" + Divider.translateHint(locale, "Shift the decimal %(num)s to the right.")+"}",
                        deciDivisor),
             "right");
 
@@ -213,8 +232,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
 
         // TODO(jeresig): i18n: This probably won't work in multiple langs
-        graph.label([dx, 1.2], $._(Divider.translateHint("\\text{Bring the decimal up into the}")), "right");
-        graph.label([dx, 0.8], $._(Divider.translateHint("\\text{answer (the quotient).}")), "right");
+        graph.label([dx, 1.2], $._("\\text{" + Divider.translateHint("Bring the decimal up into the")+"}"), "right");
+        graph.label([dx, 0.8], $._("\\text{"+Divider.translateHint("answer (the quotient).")+"}"), "right");
         this.addDecimals([[digitsDividend.length + deciDiff - 0.5, 0.9]]);
     };
 
@@ -322,8 +341,9 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
 
         drawDigits([0], index, 0);
         this.addDecimals([[index - 0.5, 0.9], [index - 0.5, -0.1]]);
-
-        graph.label([dx, 1], $._(Divider.translateHint(locale, "\\text{Write in a decimal and a zero.}")), "right");
+        
+        var txt_en = 'Write in a decimal and a zero.'
+        graph.label([dx, 1], $._('\\text{'+Divider.translateHint(locale, txt_en)+'}'), "right");
     };
 
     this.showRemainder = function(remainder) {
@@ -335,7 +355,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             txt_en = '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}';
             txt = $._(Divider.translateHint(locale, txt_en),
                     { remainder: remainder, divisor: divisor });
-            var remainderShorthand = Divider.translateHint(locale, "\\text{R}");
+            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R") + "}";
             
             //TODO(danielhollas): (i18n): remainder is not positioned optimally when there are leading zeros
             drawDigits([remainderShorthand].concat(KhanUtil.integerToDigits(remainder)), dxRemainder, dyResult);
@@ -464,37 +484,38 @@ Divider.getHints = function(divisor, digitsDividend, deciDivisor, deciDividend, 
     return hints;
 };
 
-
+var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
+decimalPointSymbol = ','
 var DIVISOR = 20;
 var DIVIDEND = 4;
 var QUOTIENT = 0.2;
 var DUMMY = [null,null,null,null,null,null,null];
 var dummy = undefined;
-var LOCALE= 'en';
+var LOCALE= 'cs';
 
     graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, 0, 0, true);
     
     DUMMY = Array( graph.divider.getNumHints() );
                 
-    graph.divider.show();
-    var dummy = undefined;
-    graph.divider.showHint();
-    var dummy = undefined;
-    graph.divider.showHint();
-    var dummy = undefined;
-    graph.divider.showHint();            
-     /*var dummy = undefined;
-         graph.divider.showHint();
-     var dummy = undefined;
-         graph.divider.showHint();
-     var dummy = undefined;
-         graph.divider.showHint();
-     var dummy = undefined;
-         graph.divider.showHint();
-     var dummy = undefined;
-         graph.divider.showHint();
-     var dummy = undefined;
-         graph.divider.showHint();
+                graph.divider.show();
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();            
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();
+            /*var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
+                graph.divider.showHint();
 
 */
 
