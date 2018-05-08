@@ -23,6 +23,8 @@ SAFE_MODE = False
 
 FORBIDDEN_FILE = "yt_upload_forbidden."
 
+SECRETS_DIR = "SECRETS/"
+
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
 
 # the OAuth 2.0 information for this application, including its client_id and
@@ -34,7 +36,8 @@ FORBIDDEN_FILE = "yt_upload_forbidden."
 #   https://developers.google.com/youtube/v3/guides/authentication
 # For more information about the client_secrets.json file format, see:
 #   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-CLIENT_SECRETS_FILE = "client_secrets.json"
+CLIENT_SECRETS_FILE = SECRETS_DIR+"client_secrets.json"
+#CLIENT_SECRETS_FILE = "client_secrets.json"
 
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
@@ -61,7 +64,7 @@ def get_authenticated_service(args):
   flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE, scope=YOUTUBE_READ_WRITE_SSL_SCOPE,
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
-  storage = Storage("%s-oauth2.json" % sys.argv[0])
+  storage = Storage(SECRETS_DIR+"%s-oauth2.json" % sys.argv[0])
   credentials = storage.get()
 
   if credentials is None or credentials.invalid:
@@ -69,7 +72,7 @@ def get_authenticated_service(args):
 
   # Trusted testers can download this discovery document from the developers page
   # and it should be in the same directory with the code.
-  with open("youtube-v3-api-captions.json", "r") as f:
+  with open(SECRETS_DIR+"youtube-v3-api-captions.json", "r") as f:
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 

@@ -15,7 +15,7 @@ from oauth2client.tools import argparser, run_flow
 is_complete = True # do we upload complete subtitles?
 
 SAFE_MODE = True
-SUPPORTED_LANGUAGES = ["cs","bg","ko"]
+SUPPORTED_LANGUAGES = ["cs","bg","ko","pl"]
 SUPPORTED_LANGUAGES = ["cs"]
 
 sub_format = 'vtt'
@@ -33,8 +33,6 @@ def read_cmd():
    parser.add_argument('-u','--update',dest='update',default=False,action="store_true", help='Update captions even if present on YT.')
    parser.add_argument('-p','--publish',dest='publish',default=True,action="store_true", help='Publish subtitles.')
    parser.add_argument('-v','--verbose',dest='verbose',default=False,action="store_true", help='More verbose output.')
-   parser.add_argument('--skip-errors', dest='skip', default=True, action="store_true", help='[default]Should I skip subtitles that couldas ytapidownloaded? \
-         The list of failed YTID\' will be printed to \"failed_yt.dat\".')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -58,17 +56,26 @@ if lang == "en":
 else:
     is_original = False
 
-print("# Syncing subtitles for language:", lang)
 
 if lang not in SUPPORTED_LANGUAGES and SAFE_MODE:
     print("ERROR: We do not support upload for language "+lang)
     sys.exit(1)
 
+print("# Syncing subtitles for language:", lang)
+#answer = answer_me("# Is that okay?")
+#if not answer:
+#   sys.exit(1)
+
 ytids = []
 # Reading file with YT id's
 with open(infile, "r") as f:
     for line in f:
-        ytids.append(line.split(opts.delim)[0])
+        l = line.split(opts.delim)
+        if len(l) > 0 and l[0][0] != "#":
+            ytids.append(l[0])
+#with open(infile, "r") as f:
+#    for line in f:
+#        ytids.append(line.split(opts.delim)[0])
 
 if len(ytids) < 20:
     print(ytids)

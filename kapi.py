@@ -108,6 +108,12 @@ def kapi_tree_print_videoids(tree, out_set):
 
 def kapi_tree_print_full(tree, out_list):
     delim = ';'
+    if len(out_list) == 0:
+        #out_list.append("SUBJECT"+delim+"TOPIC"+delim+"TUTORIAL"+delim+"TITLE\n")
+        out_list.append("\n")
+    # Attempting to make Full domain listing work
+    #if tree["kind"] == "Topic" and tree["render_type"] == 'Subject':
+    #   out_list.append("\n")
     if tree["kind"] == "Topic":
 
         if len(tree["children"]) <= 0:
@@ -147,7 +153,7 @@ def kapi_tree_print_full(tree, out_list):
             ytid = tree["youtube_id"]
             # yt_url is not present in all videos, we will make our own
             #yt_url = tree['url']
-            yt_url = 'https://www.youtube.com/watch?v='+ytid
+            yt_url = 'https://www.youtube.com/timedtext_video?v='+ytid
             if 'mp4' in tree['download_urls']:
                 download_urls = tree['download_urls']['mp4']
             else:
@@ -160,8 +166,8 @@ def kapi_tree_print_full(tree, out_list):
             dur = " "
  
         # This does not work, google sheets interprets this as a text
-        link_ka = 'HYPERLINK("'+ka_url+'","link")'
-        link_yt = 'HYPERLINK("'+yt_url+'","link")'
+        #link_ka = 'HYPERLINK("'+ka_url+'","link")'
+        #link_yt = 'HYPERLINK("'+yt_url+'","link")'
 
         # TODO add Amara link - maybe we don't need auth for that
 

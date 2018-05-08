@@ -60,7 +60,7 @@ ytids = []
 with open(infile, "r") as f:
     for line in f:
         l = line.split()
-        if l[0][0] != "#":
+        if len(l) > 0 and l[0][0] != "#":
             ytids.append(line.split())
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.

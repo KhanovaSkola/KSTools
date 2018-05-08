@@ -31,6 +31,11 @@ def print_children_titles(content_tree):
     for child in content_tree["children"]:
        pprint(child['title'])
 
+def print_dict_without_children(dictionary):
+    for k in dictionary.keys():
+        if k != 'children':
+            print(k, dictionary[k])
+
 def find_topic(tree, title):
     if "children" not in tree.keys() or len(tree['children']) == 0:
         return None
@@ -93,6 +98,9 @@ if __name__ == "__main__":
     # The following is helpful to determine where things are
     if lst:
         if subtree is not None:
+            print("Printing dictionary for topic ", subject_title)
+            print_dict_without_children(subtree)
+            print("=============================")
             print_children_titles(subtree)
             sys.exit(0)
         else:
@@ -108,7 +116,7 @@ if __name__ == "__main__":
     
     kapi_tree_print_full(subtree, content)
 
-    filename = what+"_"+subject_title+"_"+date+".txt"
+    filename = what+"_"+format_filename(subject_title)+"_"+date+".csv"
     with open(filename,"w") as f:
         for c in content:
             f.write(c)
