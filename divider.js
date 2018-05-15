@@ -18,7 +18,7 @@ Divider.translateHint = function(locale, string) {
         },
         
         'R': { // as in 'Remainder'
-            'cs': '\\text{zb. }\~\~'
+            'cs': "zb."
         },
         
         '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
@@ -48,7 +48,7 @@ Divider.translateHint = function(locale, string) {
     if (!(string in stringTranslations)) {
         return "ERROR: missing translation!";
     } else if (!(locale in stringTranslations[string])) {
-        return 'ERROR: missing translation for locale '+locale
+        return 'ERROR: missing translation for locale '+locale;
     }
     
     return stringTranslations[string][locale];
@@ -94,7 +94,6 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     var dxHint = 0.0;
     var dxResult = 0.0;
     var dyResult = 1.0;
-    var dxRemainder = 0.0;
 
     this.show = function() {
         // Count number of subdivisions shown and find how many decimals have been added
@@ -124,16 +123,15 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         if (locale === 'en') {
             dxMinus = paddedDivisor.length;
             dx += digitsDividend.length;
-            dxRemainder = digitsDividend.length;
         } else {
             dxMinus = digitsDividend.length-1.25;
-            dx += paddedDivisor.length + 2.25;
+            dx += (paddedDivisor.length)*0.75 + 2.25;
+            //dx += digitsDivisor.length+2.25;
             dxSmall = 0.75;
             dxHint = -digitsDividend.length+1.5;
-            dxResult = dx - 0.2+1.0;
+            dxResult = dx - 0.2 + 1.0;
             dyResult = 0.0;
             dy = 1.0;
-            dxRemainder = -dxHint + dx + 2.5;
         }
         
         graph.init({
@@ -271,7 +269,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
 
         // Highlight current dividend
         var digits = KhanUtil.integerToDigits(currentValue);
-        highlights = highlights.concat(drawDigits(digits, index - digits.length + 1+dxHint, dy, KhanUtil.BLUE));
+        highlights = highlights.concat(drawDigits(digits, index - digits.length + 1 + dxHint, dy, KhanUtil.BLUE));
     };
 
     this.showDivisionStepResult = function(result, remainder) {
@@ -342,7 +340,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         drawDigits([0], index, 0);
         this.addDecimals([[index - 0.5, 0.9], [index - 0.5, -0.1]]);
         
-        var txt_en = 'Write in a decimal and a zero.'
+        var txt_en = 'Write in a decimal and a zero.';
         graph.label([dx, 1], $._('\\text{'+Divider.translateHint(locale, txt_en)+'}'), "right");
     };
 
@@ -355,9 +353,15 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             txt_en = '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}';
             txt = $._(Divider.translateHint(locale, txt_en),
                     { remainder: remainder, divisor: divisor });
-            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R") + "}";
+            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R") + "}~~";
             
-            //TODO(danielhollas): (i18n): remainder is not positioned optimally when there are leading zeros
+            var dxRemainder = 0.0;
+            if (locale === 'en') {
+                dxRemainder = digitsDividend.length;
+            } else {
+                dxRemainder = dxResult + index + 1.0;
+            }
+
             drawDigits([remainderShorthand].concat(KhanUtil.integerToDigits(remainder)), dxRemainder, dyResult);
         }
 
@@ -400,7 +404,7 @@ Divider.processDividend = function(dividendDigits, deciDividend) {
 
     // Add zeros before the decimal point
     var extraZeros = deciDividend - dividendDigits.length + 1;
-    for (var i = 0; i < extraZeros; i++) {
+    for (var j = 0; j < extraZeros; j++) {
         dividendDigits.splice(0, 0, 0);
     }
 
@@ -485,15 +489,15 @@ Divider.getHints = function(divisor, digitsDividend, deciDivisor, deciDividend, 
 };
 
 var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
-decimalPointSymbol = ','
-var DIVISOR = 20;
-var DIVIDEND = 4;
+decimalPointSymbol = ',';
+var DIVISOR = 4;
+var DIVIDEND = 6354;
 var QUOTIENT = 0.2;
 var DUMMY = [null,null,null,null,null,null,null];
 var dummy = undefined;
 var LOCALE= 'cs';
 
-    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, 0, 0, true);
+    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, 0, 0, false);
     
     DUMMY = Array( graph.divider.getNumHints() );
                 
@@ -503,19 +507,18 @@ var LOCALE= 'cs';
             var dummy = undefined;
                 graph.divider.showHint();
             var dummy = undefined;
-                graph.divider.showHint();            
-            var dummy = undefined;
                 graph.divider.showHint();
             var dummy = undefined;
                 graph.divider.showHint();
             var dummy = undefined;
                 graph.divider.showHint();
-            /*var dummy = undefined;
+            var dummy = undefined;
+                graph.divider.showHint();
+            var dummy = undefined;
                 graph.divider.showHint();
             var dummy = undefined;
                 graph.divider.showHint();
             var dummy = undefined;
                 graph.divider.showHint();
 
-*/
 
