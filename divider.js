@@ -29,14 +29,16 @@ Divider.translateHint = function(locale, string) {
         },
         
         "Shift the decimal 1 to the right.": {
-            'cs': 'TODO-cs: Untranslated'
+            'cs': 'Posuň desetinnou čárku o 1 místo doprava.'
         },
+        // We lack a proper multiple plural support, 
+        // but here the %(num)s should be mostly 2-4
         "Shift the decimal %(num)s to the right.": {
-            'cs': 'TODO-cs: Untranslated'
+            'cs': 'Posuň desetinnou čárku o %(num)s místa doprava.'
         },
         
         "Bring the decimal up into the": {
-            'cs': 'TODO-cs: Untranslated'
+            'cs': 'Zkopíruj desetinnou čárku do výsledku'
         },
         
         "answer (the quotient).": {
@@ -143,32 +145,40 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         graph.style({
             fill: "#000"
         }, function() {
+            var dcx = 0; // Maybe we need this one to be permamnent
             if (deciDivisor !== 0) {
+                dcx = -1 - deciDivisor;
+                if (locale != 'en') {
+                    dcx = dxSmall + decimalsAdded + paddedDivisor.length - deciDivisor+0.75;
+                }
                 decimals = decimals.concat(
-                    graph.label([-1 - deciDivisor, -0.1],
+                    graph.label([dcx, -0.1],
                         "\\LARGE{" + decimalPointSymbol + "}", "center", true));
             }
             if (deciDividend !== 0) {
+                dcx = digitsDividend.length - deciDividend - 0.5;
+                if (locale != 'en') {
+                    dcx = dxSmall+decimalsAdded - deciDividend + 0.25;
+                }
                 decimals = decimals.concat(
-                    graph.label(
-                        [digitsDividend.length - deciDividend - 0.5, -0.1],
+                    graph.label( [dcx, -0.1],
                         "\\LARGE{" + decimalPointSymbol + "}", "center", true));
             }
         });
 
-       
-        //DH edit
         if (locale === 'en') {
             drawDigits(paddedDivisor, -0.5 - dxMinus, 0);
             drawDigits(digitsDividend, 0, 0);
             graph.path([[-0.75, -0.5], [-0.75, 0.5], [dx - 0.8, 0.5]]);
         } else {
             drawDigits(digitsDividend, -0.5 - dxMinus + dxSmall, 0);
-            //TODO:danielhollas We might need to split this label into pieces
             graph.label([dxSmall+decimalsAdded, 0],
-                "\\LARGE{"+ divSign + "" + divisor + "} =",
-                "right");
-            //drawDigits(paddedDivisor, 0, 0);
+                "\\LARGE{"+ divSign + "}", "right");
+                
+            drawDigits(paddedDivisor, dxSmall+decimalsAdded+1.25, 0);
+            
+            graph.label([dxSmall+decimalsAdded+paddedDivisor.length+0.5, 0],
+                "\\LARGE{=}", "right");
         }
     };
 
@@ -207,14 +217,19 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
 
     this.shiftDecimals = function() {
         this.clearArray(decimals);
-
         temporaryLabel = graph.label([dx, 1],
             $.ngettext("\\text{" + Divider.translateHint(locale, "Shift the decimal 1 to the right.")+"}",
                        "\\text{" + Divider.translateHint(locale, "Shift the decimal %(num)s to the right.")+"}",
                        deciDivisor),
             "right");
 
-        this.addDecimals([[-1, -0.1], [digitsDividend.length + deciDiff - 0.5, -0.1]]);
+        if (locale === 'en') {
+            this.addDecimals([[-1, -0.1], [digitsDividend.length + deciDiff - 0.5, -0.1]]); 
+        } else {
+            this.addDecimals([[-1, -0.1], [digitsDividend.length + deciDiff - 0.5, -0.1]]);
+            //DH TODO: Unfortunately, these variables are not defined here!
+            //this.addDecimals([[decimalsAdded + paddedDivisor.length - deciDivisor+0.75, -0.1]]);
+        }
 
         // Draw extra zeros in the dividend
         if (deciDiff > 0) {
@@ -226,6 +241,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
     };
 
+    // TODO(dhollas): i18n: We might need to rewrite this function
+    // for EU style division
     this.bringUpDecimal = function() {
         if (temporaryLabel) {
             temporaryLabel.remove();
@@ -233,9 +250,17 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
 
         // TODO(jeresig): i18n: This probably won't work in multiple langs
-        graph.label([dx, 1.2], $._("\\text{" + Divider.translateHint("Bring the decimal up into the")+"}"), "right");
-        graph.label([dx, 0.8], $._("\\text{"+Divider.translateHint("answer (the quotient).")+"}"), "right");
-        this.addDecimals([[digitsDividend.length + deciDiff - 0.5, 0.9]]);
+        graph.label([dx, 1.2], $._("\\text{" + Divider.translateHint(locale, "Bring the decimal up into the")+"}"), "right");
+        
+        if (locale === 'en') {
+            graph.label([dx, 0.8], $._("\\text{"+Divider.translateHint(locale, "answer (the quotient).")+"}"), "right");
+            this.addDecimals([[digitsDividend.length + deciDiff - 0.5, 0.9]]);
+
+        } else {
+            //TODO: We need to indicate somehow the spaces on the left of decimal comma that will be filled in a subsequent computation...
+            this.addDecimals([[digitsDividend.length + deciDiff + dxResult, -0.1]]);   
+        }
+        
     };
 
     this.showDivisionStep = function(division) {
@@ -512,25 +537,28 @@ var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
 // Rewritten here to decimal comma
 decimalPointSymbol = ',';
 
-var DIVISOR = 5;
-var DIVIDEND = 57;
-var DIVISOR_DECIMAL = 0;
-var DIVIDEND_DECIMAL = 0;
+// 3.045/0.35 = ?
+
+var DIVISOR = 350;
+var DIVIDEND = 3045;
+var DIVISOR_DECIMAL = 2;
+var DIVIDEND_DECIMAL = 3;
+var decimal_remainder = true; //Set to false for division of whole numbers with a remainder
 
 var LOCALE= 'cs';
 
-    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, true);
+    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, decimal_remainder);
     
     graph.divider.show();
     
     graph.divider.showHint();
     graph.divider.showHint();
+    /*graph.divider.showHint();
     graph.divider.showHint();
     graph.divider.showHint();
     graph.divider.showHint();
     graph.divider.showHint();
-    graph.divider.showHint();
-    graph.divider.showHint();
+    graph.divider.showHint();*/
 
 
 
