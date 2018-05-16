@@ -3,7 +3,6 @@ Divider.translateHint = function(locale, string) {
     if (locale === 'en')
         return string;
     
-    //TODO(danielhollas): i18n: \\text{} markup should be outside of this function. Or Maybe add it automatically to the input string? Probably not.
     var stringTranslations = {
         ' with a remainder of ': {
             'cs': ' se zbytkem '
@@ -17,8 +16,8 @@ Divider.translateHint = function(locale, string) {
             'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}'
         },
         
-        'R': { // as in 'Remainder'
-            'cs': "zb."
+        'R}': { // as in 'Remainder'
+            'cs': "zb.}~~"
         },
         
         '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
@@ -26,7 +25,7 @@ Divider.translateHint = function(locale, string) {
         },
         
         'Write in a decimal and a zero.': {
-            'cs': 'Napiš desetinnou čárku a nulu.'
+            'cs': 'Zapiš jako desetinné číslo a připiš nulu.'
         },
         
         "Shift the decimal 1 to the right.": {
@@ -67,7 +66,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     var numHints = hints.length;
     var divSign = "\\div";
     var divSigns = {
-        ":": ["cs", "pl"]
+        ":": ["cs", "pl"],
+        "\\div": ["en"]
     };
     
     for (key in divSigns) {
@@ -111,6 +111,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         if (deciDivisor !== 0) {
             paddedDivisor = (KhanUtil.padDigitsToNum(digitsDivisor.reverse(), deciDivisor + 1)).reverse();
         }
+
         
         // Calculate the x-coordinate for the hints
         // DH EDIT: We need to account for the equal sign
@@ -125,7 +126,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             dx += digitsDividend.length;
         } else {
             dxMinus = digitsDividend.length-1.25;
-            dx += (paddedDivisor.length)*0.75 + 2.25;
+            dx += (paddedDivisor.length)*0.75 + 2.4;
             //dx += digitsDivisor.length+2.25;
             dxSmall = 0.75;
             dxHint = -digitsDividend.length+1.5;
@@ -163,9 +164,11 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             graph.path([[-0.75, -0.5], [-0.75, 0.5], [dx - 0.8, 0.5]]);
         } else {
             drawDigits(digitsDividend, -0.5 - dxMinus + dxSmall, 0);
-            graph.label([dxSmall, 0],
+            //TODO:danielhollas We might need to split this label into pieces
+            graph.label([dxSmall+decimalsAdded, 0],
                 "\\LARGE{"+ divSign + "" + divisor + "} =",
                 "right");
+            //drawDigits(paddedDivisor, 0, 0);
         }
     };
 
@@ -247,12 +250,12 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
         
         // Bring down another number
-        //DH EDIT, remove those weird zeros for now
         if (!fOnlyZeros) {
             graph.style({
                 arrows: "->"
             }, function() {
-                //DH EDIT: added dxHint to index, seems to work for en as well?? Need to check!
+                //DH EDIT: added dxHint to index
+                //dxHint is 0 for en
                 highlights.push(graph.path([[index+dxHint, -0.5], [index+dxHint, dy + 0.5]]));
             });
 
@@ -261,8 +264,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             } else {
                 // Add a zero in the dividend and bring that down
                 // DH I do not understand this, so commenting out for now
-                if (locale === 'en')
-                    drawDigits([0], index, 0);
+                //if (locale === 'en')
+                    drawDigits([0], index+dxHint, 0);
                 drawDigits([0], index+dxHint, dy);
             }
         }
@@ -337,11 +340,27 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         deciDividend = 1;
         deciDiff = deciDivisor - deciDividend;
 
-        drawDigits([0], index, 0);
-        this.addDecimals([[index - 0.5, 0.9], [index - 0.5, -0.1]]);
+        var decx1 = index - 0.5;
+        var decx2 = decx1;
+        var decy1 = 0.9;
+        var decy2 = -0.1;
+        var dumb_correction = 0.0; 
+        if (locale != 'en') {
+            dumb_correction = 0.5;
+            decx1 += dumb_correction-1.0*(index-1.0);
+            decy1 = decy2;
+            decx2 = dxResult+0.5+1.0*(index-1.0);
+        }
+        
+        drawDigits([0], decx1+0.5, 0);
+        this.addDecimals([[decx1, decy1], [decx2, decy2]]);
         
         var txt_en = 'Write in a decimal and a zero.';
-        graph.label([dx, 1], $._('\\text{'+Divider.translateHint(locale, txt_en)+'}'), "right");
+        var ly = 1;
+        if (locale != 'en') {
+            ly = 1.5;
+        }
+        graph.label([dx, ly], $._('\\text{'+Divider.translateHint(locale, txt_en)+'}'), "right");
     };
 
     this.showRemainder = function(remainder) {
@@ -353,7 +372,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             txt_en = '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}';
             txt = $._(Divider.translateHint(locale, txt_en),
                     { remainder: remainder, divisor: divisor });
-            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R") + "}~~";
+            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R}");
             
             var dxRemainder = 0.0;
             if (locale === 'en') {
@@ -488,37 +507,33 @@ Divider.getHints = function(divisor, digitsDividend, deciDivisor, deciDividend, 
     return hints;
 };
 
+// This is US decimal point
 var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
+// Rewritten here to decimal comma
 decimalPointSymbol = ',';
-var DIVISOR = 4;
-var DIVIDEND = 6354;
-var QUOTIENT = 0.2;
-var DUMMY = [null,null,null,null,null,null,null];
-var dummy = undefined;
+
+var DIVISOR = 5;
+var DIVIDEND = 57;
+var DIVISOR_DECIMAL = 0;
+var DIVIDEND_DECIMAL = 0;
+
 var LOCALE= 'cs';
 
-    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, 0, 0, false);
+    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, true);
     
-    DUMMY = Array( graph.divider.getNumHints() );
-                
-                graph.divider.show();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
-            var dummy = undefined;
-                graph.divider.showHint();
+    graph.divider.show();
+    
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+    graph.divider.showHint();
+
+
+
+
 
 
