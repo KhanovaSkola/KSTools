@@ -130,7 +130,7 @@ for i in range(len(ytids)):
 
 #   Check whether video is there
     amara_response = check_video( video_url_to, amara_headers, s=am_ses)
-    if amara_response['meta']['total_count'] == 0:
+    if not amara_response or amara_response['meta']['total_count'] == 0:
         video_present = False
         lang_present  = False
     else:
@@ -146,7 +146,7 @@ for i in range(len(ytids)):
                 #if lg["visible"] == True:
                 #    lang_visible = True
                 break
-        lang_present, sub_version = check_language(amara_id, lang, amara_headers)
+        lang_present, sub_version = check_language(amara_id, lang, amara_headers, s  = am_ses)
         if lang_present and lang_visible and sub_version > 0:
             f_vids.write(ytid_from+'\n')
             if opts.verbose:
