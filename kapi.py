@@ -2,9 +2,13 @@
 import json, sys
 import requests 
 from pprint import pprint
+from utils import load_obj_bin
 
+# TODO: Need to make locale configurable..ideally, make all this into object
+# And pass locale in constructor
 #SERVER_URL = 'http://bg.khanacademy.org'
-SERVER_URL = 'http://khanacademy.org'
+#SERVER_URL = 'https://khanacademy.org'
+SERVER_URL = 'https://cs.khanacademy.org'
 TP_URL = 'https://www.khanacademy.org/translations/edit/cs/'
 DEFAULT_API_RESOURCE = '/api/v1/'
 # Version 2 is not documented, here used only for topic tree
@@ -192,4 +196,48 @@ def kapi_tree_print_full(tree, out_list):
         table_row = table_row + '\n'
 
         out_list.append(table_row)
+
+
+def find_ka_topic(tree, title):
+    if "children" not in tree.keys() or len(tree['children']) == 0:
+        return None
+    for c in tree['children']:
+        if c['title'] == title:
+            return c
+    # Breadth first search
+    for c in tree['children']:
+        result = find_ka_topic(c, title)
+        if result is not None:
+           return result
+    # Depth first search
+    #    else:
+    #        result = find_topic(c, title)
+    #        if result is not None:
+    #            return result
+    return None
+
+
+def kapi_tree_get_content_items(tree, out):
+    if 'children' not in tree.keys():
+        print(tree)
+        sys.exit(0)
+
+    if len(tree['children']) == 0:
+        out.append(tree)
+        print(tree)
+        sys.exit(0)
+
+    for c in tree['children']:
+        kapi_tree_get_content_items(c, out)
+
+    return out
+
+
+def load_ka_tree(content, content_types):
+    if content not in content_types:
+        print("Invalid content type!", content)
+        print("Possibilities are:", content_types)
+        exit(0)
+    else:
+        return load_obj_bin("KAtree_"+content+"_bin")
 

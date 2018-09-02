@@ -45,7 +45,7 @@ if __name__ == "__main__":
     if download:
         tree = kapi_download_topictree(what)
         if tree != None:
-            save_obj_text(tree, "KAtree_"+what+"_txt")
+            #save_obj_text(tree, "KAtree_"+what+"_txt")
             save_obj_bin(tree, "KAtree_"+what+"_bin")
         else:
             tree = load_ka_tree(what, content_types)
@@ -57,41 +57,10 @@ if __name__ == "__main__":
         # We are using set to get rid of duplicates
         videos = set()
  
-        kapi_tree_print_videoids(tree, videos)
+        kapi_tree_get_content_items(tree, videos)
  
-        with open("allvideos_ids.dat","w") as out:
+        with open("videos.json","w", encoding = 'utf-8') as out:
             for v in videos:
                 out.write(v)
 
-
-    if subject_title == 'root':
-        subtree = tree
-    else:
-        subtree = find_ka_topic(tree, subject_title)
-
-    # The following is helpful to determine where things are
-    if lst:
-        if subtree is not None:
-            print("Printing dictionary for topic ", subject_title)
-            print_dict_without_children(subtree)
-            print("=============================")
-            print_children_titles(subtree)
-            sys.exit(0)
-        else:
-            print("ERROR: Could not find topic titled: "+subject_title)
-            sys.exit(1)
-    
-    # Making large table of data for a given subject
-    # Note that this unfortunately only work at the subject level,
-    # Not for e.g. individual topics or tutorials
-    # We should fix function kapi_tree_print_full to be more general
-    content = []
-    date = time.strftime("%d%m%Y")
-    
-    kapi_tree_print_full(subtree, content)
-
-    filename = what+"_"+format_filename(subject_title)+"_"+date+".csv"
-    with open(filename, "w", encoding = 'utf-8') as f:
-        for c in content:
-            f.write(c)
 
