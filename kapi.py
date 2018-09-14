@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import json, sys
 import requests 
 from pprint import pprint
@@ -218,20 +219,39 @@ def find_ka_topic(tree, title):
 
 
 def kapi_tree_get_content_items(tree, out):
-    if 'children' not in tree.keys():
-        print(tree)
-        sys.exit(0)
+    # TODO: We need to make sure KA API returns only listed content...
 
-    if len(tree['children']) == 0:
+    #TODO: Filter out based on "hide" attribute (although it is supposedly deprecated...)
+#    if 'children' not in tree.keys() or len(tree['children']) == 0:
+  try:
+    if tree["content_kind"] and tree["content_kind"] != "Topic":
         out.append(tree)
-        print(tree)
-        sys.exit(0)
+        return out
+  except:
+    pprint(tree)
+    raise
+#       print(tree.keys())
+#       sys.exit(0)
 
     for c in tree['children']:
         kapi_tree_get_content_items(c, out)
 
     return out
 
+def kapi_tree_get_content_items(tree, out, content_type="all"):
+    # TODO: We need to make sure KA API returns only listed content...
+
+    #TODO: Filter out based on "hide" attribute (although it is supposedly deprecated...)
+#    if 'children' not in tree.keys() or len(tree['children']) == 0:
+    if tree["content_kind"] != "Topic":
+        if content_type == "all" or content_type == tree["content_kind"].lower():
+            out.append(tree)
+        return out
+
+    for c in tree['children']:
+        kapi_tree_get_content_items(c, out)
+
+    return out
 
 def load_ka_tree(content, content_types):
     if content not in content_types:

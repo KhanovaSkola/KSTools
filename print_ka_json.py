@@ -3,7 +3,7 @@ from kapi import *
 from utils import *
 import argparse, sys
 import time
-
+import json
 
 def read_cmd():
    """Function for reading command line options."""
@@ -11,56 +11,150 @@ def read_cmd():
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('-d','--download',dest='download',default=False,action="store_true", help='Download most up-to-date full tree?')
    parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
-   parser.add_argument('-c','--content', dest='content', default="all", help='Which kind of content should we download? Options: video|exercise|article|topic')
+   parser.add_argument('-c','--content', dest='content', default="", help='Which kind of content should we download? Options: video|exercise|article|topic')
    parser.add_argument('-l','--list', dest='list', default=False,action="store_true", help='Only list topic names within given domain/subject/topic.')
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
-content_types = ["video", "article", "exercise", "topic","all"]
+content_types = ["video", "article", "exercise", "topic"]
 
 
 def print_children_titles(content_tree):
     for child in content_tree["children"]:
        pprint(child['title'])
 
+
 def print_dict_without_children(dictionary):
     for k in dictionary.keys():
         if k != 'children':
             print(k, dictionary[k])
 
+
 if __name__ == "__main__":
 
     opts = read_cmd()
     download = opts.download
-    subject_title  = opts.subject
-    what = opts.content.lower()
+    topic_title  = opts.subject
+    content_type = opts.content.lower()
     lst = opts.list
 
-
-    if what not in content_types:
+    if content_type not in content_types:
         print("ERROR: content argument:", opts.content)
         print("Possibilities are:", content_types)
         exit(1)
 
     if download:
-        tree = kapi_download_topictree(what)
+        tree = kapi_download_topictree(content_type)
         if tree != None:
             #save_obj_text(tree, "KAtree_"+what+"_txt")
-            save_obj_bin(tree, "KAtree_"+what+"_bin")
+            save_obj_bin(tree, "KAtree_" + content_type + "_bin")
         else:
-            tree = load_ka_tree(what, content_types)
+            tree = load_ka_tree(content_type, content_types)
     else:
         #tree = load_obj_bin("KAtree_"+what+"_bin")
-        tree = load_ka_tree(what, content_types)
+        tree = load_ka_tree(content_type, content_types)
 
-    if  what == 'video' or what == 'all':
-        # We are using set to get rid of duplicates
-        videos = set()
+    # Pick just concrete topic from KA tree
+    subtree = find_ka_topic(tree, topic_title)
+
+    # TODO: We need to take care of the duplicates
+    content = []
  
-        kapi_tree_get_content_items(tree, videos)
+    # TODO: Filter out only given content type
+    #kapi_tree_get_content_items(subtree, content, content_type)
+    kapi_tree_get_content_items(subtree, content, content_type)
+    pprint(content[0].keys())
+    rvp_content = []
+
+    # TODO: compactify all these dicts...
+    courses = {
+        "Early math": "early",
+        "Arithmetic": "arith",
+        "Trigonometry": "trig"
+    }
+
+    try:
+        course = courses[topic_title]
+    except:
+        print("Invalid course!")
+        raise
+    
+    ppuc_types = {
+        "video": "8-VI",
+        "exercise": "8-IC",
+        "article": "8-CL"
+    }
+
+    subjects = {
+        "math": "9-03"
+    }
+
+    subject_topic_map = {
+        "early": subjects["math"],
+        "arith": subjects["math"],
+        "trig": subjects["math"]
+    }
+
+    licenses = {
+        "cc-by-nc-nd": "1-CCBYNCND30",
+        "cc-by-nc-sa": "1-CCBYNCSA30",
+        "cc-by-sa": "1-CCBYSA30",
+        "yt-standard": "1-OST"
+    }
+
+    stupen = {
+        "early": "2-Z",
+        "arith": "2-Z",
+        "trig": "2-G"
+    }
+
+    ppuc_grades = {
+        "early": "3-Z13",
+        "arith": "3-Z45", # Not sure about this...
+        "trig": "3-SS"
+    }
+
+    for v in content:
+
+        try:
+          item = {
+            "id": v["id"],
+            "url": v["ka_url"],
+            "nazev": v["translated_title"],
+            "popis": v["translated_description"],
+            "autor": "Khan Academy",
+            # KA API gives keywords in EN, commenting out for now....
+#            "klicova_slova": v["keywords"],
+            "datum_vzniku" : v["creation_date"],
+            "jazyk": "5-cs",
+#            "otevreny_zdroj": "7-ANO",
+            "dostupnost": "7-ANO",
+            "vzdelavaci_obor": subject_topic_map[course],
+            "typ": ppuc_types[content_type],
+            "rocnik": ppuc_grades[course],
+            "stupen_vzdelavani": stupen[course],
+            "gramotnost": "4-MA" # TODO
+          }
+          if "ka_user_licence" in v.keys():
+             item["licence"] = licenses[v["ka_user_license"]]
+          else:
+             item["licence"] = licenses["cc-by-nc-sa"] # Let's just take the KA default
+
+          if item["licence"] == "1-OST":
+              if v["ka_user_licence"] == "yt-standard":
+                item["licence_url"] = "https://www.youtube.com/static?template=terms&gl=CZ"
+              else:
+                print("Missing license URL!")
+                del item["licence"]
+
+          rvp_content.append(item)
+
+        except:
+            print("Key error!")
+            pprint(v)
+            raise
  
-        with open("videos.json","w", encoding = 'utf-8') as out:
-            for v in videos:
-                out.write(v)
+    with open("%s_%s.json" % (topic_title.lower(), content_type), "w", encoding = "utf-8") as out:
+        out.write(json.dumps(rvp_content, ensure_ascii=False))
 
 
