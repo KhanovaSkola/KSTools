@@ -20,8 +20,8 @@ Divider.translateHint = function(locale, string) {
         },
         
         'R}': { // as in 'Remainder'
-            'cs': "zb.}~~",
-            'fr': '',
+            'cs': 'zb.}~~',
+            'fr': 'et r} = ',
         },
         
         '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
@@ -181,14 +181,22 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
             drawDigits(digitsDividend, 0, 0);
             graph.path([[-0.75, -0.5], [-0.75, 0.5], [dx - 0.8, 0.5]]);
         } else {
+
             drawDigits(digitsDividend, -0.5 - dxMinus + dxSmall, 0);
-            graph.label([dxSmall+decimalsAdded, 0],
-                "\\LARGE{"+ divSign + "}", "right");
-                
             drawDigits(paddedDivisor, dxSmall+decimalsAdded+1.25, 0);
-            
-            graph.label([dxSmall+decimalsAdded+paddedDivisor.length+0.5, 0],
+
+            if (locale === 'fr') {
+                graph.path([[dxSmall+decimalsAdded+0.5, 0.5],
+                            [dxSmall+decimalsAdded+0.5, -5]]);
+                graph.path([[dxSmall+decimalsAdded+0.5, -0.4],
+                            [dxSmall+decimalsAdded+3, -0.4]]);
+
+            } else {
+                graph.label([dxSmall+decimalsAdded, 0],
+                    "\\LARGE{"+ divSign + "}", "right");
+                graph.label([dxSmall+decimalsAdded+paddedDivisor.length+0.5, 0],
                 "\\LARGE{=}", "right");
+            }
         }
     };
 
