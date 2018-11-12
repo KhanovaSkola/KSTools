@@ -5,44 +5,54 @@ Divider.translateHint = function(locale, string) {
     
     var stringTranslations = {
         ' with a remainder of ': {
-            'cs': ' se zbytkem '
+            'cs': ' se zbytkem ',
+            'fr': '',
         },
         
         'The remainder is 0, so we have our answer.': {
-            'cs': 'Zbytek je 0, takže máme výsledek!'
+            'cs': 'Zbytek je 0, takže máme výsledek!',
+            'fr': '',
         },
         
         '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}': {
-            'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}'
+            'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}',
+            'fr': '',
         },
         
         'R}': { // as in 'Remainder'
-            'cs': "zb.}~~"
+            'cs': "zb.}~~",
+            'fr': '',
         },
         
         '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
-            'cs' : "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}"
+            'cs' : "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}",
+            'fr': '',
         },
         
         'Write in a decimal and a zero.': {
-            'cs': 'Zapiš jako desetinné číslo a připiš nulu.'
+            'cs': 'Zapiš jako desetinné číslo a připiš nulu.',
+            'fr': '',
         },
         
         "Shift the decimal 1 to the right.": {
-            'cs': 'Posuň desetinnou čárku o 1 místo doprava.'
+            'cs': 'Posuň desetinnou čárku o 1 místo doprava.',
+            'fr': '',
         },
         // We lack a proper multiple plural support, 
         // but here the %(num)s should be mostly 2-4
         "Shift the decimal %(num)s to the right.": {
-            'cs': 'Posuň desetinnou čárku o %(num)s místa doprava.'
+            'cs': 'Posuň desetinnou čárku o %(num)s místa doprava.',
+            'fr': '',
         },
         
         "Bring the decimal up into the": {
-            'cs': 'Zkopíruj desetinnou čárku do výsledku'
+            'cs': 'Zkopíruj desetinnou čárku do výsledku',
+            'fr': '',
         },
         
         "answer (the quotient).": {
-            'cs': 'TODO-cs: Untranslated'
+            'cs': 'TODO-cs: Untranslated',
+            'fr': '',
         }
     };
     
@@ -532,36 +542,28 @@ Divider.getHints = function(divisor, digitsDividend, deciDivisor, deciDividend, 
     return hints;
 };
 
+// The following is relevant only for dividing decimals, which does not work yet
 // This is US decimal point
 var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
 // Rewritten here to decimal comma
 decimalPointSymbol = ',';
-
 // 3.045/0.35 = ?
+var DIVISOR_DECIMAL = 0;
+var DIVIDEND_DECIMAL = 0;
 
-var DIVISOR = 350;
-var DIVIDEND = 3045;
-var DIVISOR_DECIMAL = 2;
-var DIVIDEND_DECIMAL = 3;
-var decimal_remainder = true; //Set to false for division of whole numbers with a remainder
 
+// MODIFY HERE
 var LOCALE= 'cs';
+//example 25 : 4
+var DIVIDEND = 25;
+var DIVISOR = 4;
+var NUMBER_OF_HINTS = 1;
+var decimal_remainder = false; //Set to false for division of whole numbers with a remainder
 
-    graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, decimal_remainder);
+graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, decimal_remainder);
     
-    graph.divider.show();
+graph.divider.show();
     
+for (var i = 0; i < NUMBER_OF_HINTS; i++) {
     graph.divider.showHint();
-    graph.divider.showHint();
-    /*graph.divider.showHint();
-    graph.divider.showHint();
-    graph.divider.showHint();
-    graph.divider.showHint();
-    graph.divider.showHint();
-    graph.divider.showHint();*/
-
-
-
-
-
-
+}
