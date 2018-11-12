@@ -16,7 +16,7 @@ def read_cmd():
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
-content_types = ["video", "article", "exercise", "topic","all"]
+content_types = ['video', 'article', 'exercise', 'topic', 'tutorial', 'all']
 
 
 def print_children_titles(content_tree):
@@ -42,16 +42,20 @@ if __name__ == "__main__":
         print("Possibilities are:", content_types)
         exit(1)
 
-    if download:
-        tree = kapi_download_topictree(what)
-        if tree != None:
-            save_obj_text(tree, "KAtree_"+what+"_txt")
-            save_obj_bin(tree, "KAtree_"+what+"_bin")
-        else:
-            tree = load_ka_tree(what, content_types)
+    if what == "tutorial" or what == "topic":
+        download_type = 'video'
     else:
-        #tree = load_obj_bin("KAtree_"+what+"_bin")
-        tree = load_ka_tree(what, content_types)
+        download_type = what
+    if download:
+        tree = kapi_download_topictree(download_type)
+        if tree != None:
+            save_obj_text(tree, "KAtree_" + download_type + "_txt")
+            save_obj_bin(tree, "KAtree_" + download_type + "_bin")
+        else:
+            tree = load_ka_tree(download_type)
+    else:
+        #tree = load_obj_bin("KAtree_"+download_type+"_bin")
+        tree = load_ka_tree(download_type)
 
     if  what == 'video' or what == 'all':
         # We are using set to get rid of duplicates
@@ -88,7 +92,10 @@ if __name__ == "__main__":
     content = []
     date = time.strftime("%d%m%Y")
     
-    kapi_tree_print_full(subtree, content)
+    if what == 'tutorial':
+        kapi_tree_print_tutorials(subtree, content)
+    else:
+        kapi_tree_print_full(subtree, content)
 
     filename = what+"_"+format_filename(subject_title)+"_"+date+".csv"
     with open(filename, "w", encoding = 'utf-8') as f:

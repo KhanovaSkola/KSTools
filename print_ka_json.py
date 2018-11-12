@@ -56,6 +56,11 @@ if __name__ == "__main__":
 
     # Pick just concrete topic from KA tree
     subtree = find_ka_topic(tree, topic_title)
+    if not subtree:
+        print("ERROR: Could not find subtree for course: %s\n" % (topic_title))
+        # DH hack
+        subtree = tree
+        #sys.exit(1)
 
     # TODO: We need to take care of the duplicates
     content = []
@@ -64,13 +69,17 @@ if __name__ == "__main__":
     #kapi_tree_get_content_items(subtree, content, content_type)
     kapi_tree_get_content_items(subtree, content, content_type)
     pprint(content[0].keys())
+    pprint(content[0]["youtube_id"])
+    pprint(content[0]["translated_youtube_id"])
     rvp_content = []
 
     # TODO: compactify all these dicts...
     courses = {
         "Early math": "early",
         "Arithmetic": "arith",
-        "Trigonometry": "trig"
+        "Trigonometry": "trig",
+        "Music": "music",
+        "Cosmology and astronomy": "astro"
     }
 
     try:
@@ -86,10 +95,14 @@ if __name__ == "__main__":
     }
 
     subjects = {
-        "math": "9-03"
+        "math": "9-03",
+        "music": "9-11",
+        "astro": "9-9, 9-10" # Not clear whether I can do this
     }
 
     subject_topic_map = {
+        "music": subjects["music"],
+        "astro": subjects["astro"],
         "early": subjects["math"],
         "arith": subjects["math"],
         "trig": subjects["math"]
@@ -105,13 +118,17 @@ if __name__ == "__main__":
     stupen = {
         "early": "2-Z",
         "arith": "2-Z",
-        "trig": "2-G"
+        "trig": "2-G",
+        "music": "2-NU",
+        "astro": "2-NU"
     }
 
     ppuc_grades = {
         "early": "3-Z13",
         "arith": "3-Z45", # Not sure about this...
-        "trig": "3-SS"
+        "trig": "3-SS",
+        "music": "3-NU",
+        "astro": "3-NU"
     }
 
     for v in content:
@@ -157,4 +174,10 @@ if __name__ == "__main__":
     with open("%s_%s.json" % (topic_title.lower(), content_type), "w", encoding = "utf-8") as out:
         out.write(json.dumps(rvp_content, ensure_ascii=False))
 
+    # Printing for Bakalari`
+    with open("%s_%s.csv" % (topic_title.lower(), content_type), "w", encoding = "utf-8") as out:
+        for c in content:
+            out.write("%s;%s;%s;%s\n" % (c["id"], c["youtube_id"], c["translated_youtube_id"],c["ka_url"]))
+
+    pprint(content[-1])
 
