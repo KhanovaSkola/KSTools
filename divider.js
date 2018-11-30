@@ -148,6 +148,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
         
         graph.init({
+            // TODO: Need to limit width to 380 px, change 17 to something smaller?
             range: [[-1 - dxMinus, 17], [-2 * steps - 1, 2]],
             scale: [20, 40]
         });
