@@ -3,11 +3,9 @@
 import json, sys
 import requests 
 from pprint import pprint
-from utils import load_obj_bin
+from utils import load_obj_bin, save_obj_bin
 
-# TODO: Need to make locale configurable..ideally, make all this into object
 # And pass locale in constructor
-#SERVER_URL = 'https://cs.khanacademy.org'
 SERVER_URL = 'https://www.khanacademy.org'
 TP_URL = 'https://www.khanacademy.org/translations/edit/cs/'
 DEFAULT_API_RESOURCE = '/api/v1/'
@@ -21,21 +19,119 @@ kapi_headers = {
    'format': 'json'
 }
 
+EXIT_ON_HTTP_ERROR = False
 
-def kapi_check_video(YTID):
-    url = SERVER_URL + DEFAULT_API_RESOURCE + 'videos/'  + YTID
-    try:
-        r = requests.get(url, headers=kapi_headers )
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        print(e)
-        sys.exit(1)
 
-    return json_response
+class KhanAPI:
 
-def kapi_download_topic(topic):
+    def __init__(self, locale):
+        if locale == 'en':
+            self.server_url = 'https://www.khanacademy.org'
+        else:
+            self.server_url = 'https://' + locale + '.khanacademy.org'
+        self.session = requests.Session()
+        self.headers = {
+            'Content-Type': 'application/json',
+            'format': 'json'
+        }
+
+    def _get_url(self, url, body = {}):
+        try:
+            r = self.session.get(url, params = body, headers = self.headers)
+            r.raise_for_status()
+            return r.json()
+
+        except requests.HTTPError as e:
+            eprint('HTTP error for URL: ', url)
+            eprint(e)
+            try:
+                eprint(r.json())
+            except:
+                # Catch exception when r.json is empty
+                pass
+            if EXIT_ON_HTTPERROR:
+                sys.exit(1)
+            else:
+                return {}
+
+    def download_video(self, YTID):
+        # Searching by YTID is deprecated but seems to work,
+        # even searching by translated_youtube_id
+        # Instead_ we should be calling this by readable_id
+        url = SERVER_URL + DEFAULT_API_RESOURCE + 'videos/'  + YTID
+        json_response = self._get_url(url)
+        return json_response
+
+
+    # TODO: Convert to V2 API
+    # It seems that the kind argument does not work?
+    # EDIT: It seems that the V2 approach will not work here...
+    def download_topic_tree(self, content_type):
+        """Content type can be 'video', 'exercise', 'article'"""
+ 
+        url = SERVER_URL + API2 + 'topics/topictree'
+        body = {
+            "kind": content_type
+        }
+        json_response = self._get_url(url, body)
+        return json_response
+
+
+class KhanContentTree():
+
+    def __init__(self, locale, content_type):
+        self.content_tree = None
+        self.content_type = content_type
+        self.file_name = "khan_tree_" + locale + '_' + self.content_type + "_bin"
+
+    def save(self, tree):
+        save_obj_bin(tree, self.file_name)
+        self.content_tree = tree
+
+    def load(self):
+        self.content_tree = load_obj_bin(self.file_name)
+
+    def get(self):
+        if self.content_tree is None:
+            self.load()
+        return self.content_tree
+
+    def get_video_ids(self, out_set, tree = None):
+        if tree is None:
+            tree = self.content_tree
+
+        if 'kind' not in tree.keys():
+            print("ERROR: Could not find 'kind' attribute among:" )
+            print(tree.keys())
+            print(tree['videos'][0].keys())
+            sys.exit(1)
+
+        if tree["kind"] == "Video":
+            out_set.add(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
+        elif tree["kind"] == "Topic":
+            # This can happen if Topic includes only Exercises or Articles
+            if len(tree["children"]) <= 0:
+                return
+            for c in tree["children"]:
+                get_video_ids(c, out_set)
+ 
+
+def kapi_download_topic(topic, kind):
     url = SERVER_URL + DEFAULT_API_RESOURCE + 'topic/'  + topic
+    if kind == 'video' or kind == 'exercise':
+        url += '/' + kind + 's'
+    print(url)
+    try:
+        r = requests.get(url, headers=kapi_headers )
+        r.raise_for_status()
+        json_response = r.json()
+    except requests.HTTPError as e:
+        print(e)
+        sys.exit(1)
+    return json_response
+
+def kapi_download_videos_from_topic(topic):
+    url = SERVER_URL + DEFAULT_API_RESOURCE + 'topic/'  + topic + ''
     try:
         r = requests.get(url, headers=kapi_headers )
         r.raise_for_status()
@@ -45,7 +141,6 @@ def kapi_download_topic(topic):
         sys.exit(1)
 
     return json_response
-
 
 def kapi_download_topictree(what='all'):
     """Argument can be 'video', 'exercise', 'article', 'topic' or 'all' """
@@ -81,7 +176,7 @@ def kapi_download_topictree(what='all'):
         r.raise_for_status()
         if r.status_code == 304:
             print("Topic tree up-to-date")
-            print("If you want to download anyway, remove file "+etagfile+" and run again.")
+            print("If you want to download anyway, remove file " + etagfile + " and run again.")
             return None
         json_response = r.json()
     except requests.HTTPError as e:
@@ -248,8 +343,10 @@ def kapi_tree_get_content_items(tree, out, content_type="all"):
     #TODO: Filter out based on "hide" attribute (although it is supposedly deprecated...)
 #    if 'children' not in tree.keys() or len(tree['children']) == 0:
     try:
-        if tree["content_kind"] != "Topic":
-            if content_type == "all" or content_type == tree["content_kind"].lower():
+        # DH DEBUG
+        if tree["kind"] != "Topic":
+            #if content_type == "all" or content_type == tree["content_kind"].lower():
+            if content_type == "all" or content_type == tree["kind"].lower():
                 out.append(tree)
             return out
     except:
@@ -257,8 +354,13 @@ def kapi_tree_get_content_items(tree, out, content_type="all"):
         pprint(out)
         raise
 
-    for c in tree['children']:
-        kapi_tree_get_content_items(c, out)
+    try:
+        for c in tree['children']:
+            kapi_tree_get_content_items(c, out)
+    except:
+        pprint(tree)
+        pprint(out)
+        raise
 
     return out
 
