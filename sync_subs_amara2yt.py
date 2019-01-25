@@ -15,8 +15,8 @@ from oauth2client.tools import argparser, run_flow
 is_complete = True # do we upload complete subtitles?
 
 SAFE_MODE = True
-SUPPORTED_LANGUAGES = ["cs","bg","ko","pl"]
-SUPPORTED_LANGUAGES = ["cs"]
+#SUPPORTED_LANGUAGES = ['cs','bg','ko','pl']
+SUPPORTED_LANGUAGES = ['cs']
 
 sub_format = 'vtt'
 sub_format2 = "srt"
@@ -31,8 +31,8 @@ def read_cmd():
    parser.add_argument('-c',dest='amara_api_file', help='Text file containing your API key and username on the first line.')
 #   parser.add_argument('-g',dest='google_api_file', help='Text file containing your Google credentials.')
    parser.add_argument('-u','--update',dest='update',default=False,action="store_true", help='Update captions even if present on YT.')
-   parser.add_argument('-p','--publish',dest='publish',default=True,action="store_true", help='Publish subtitles.')
-   parser.add_argument('-v','--verbose',dest='verbose',default=False,action="store_true", help='More verbose output.')
+   parser.add_argument('-p','--publish', dest='publish', default=True, action="store_true", help='Publish subtitles.')
+   parser.add_argument('-v','--verbose', dest='verbose', default=False, action="store_true", help='More verbose output.')
    return parser.parse_args()
 
 opts = read_cmd()

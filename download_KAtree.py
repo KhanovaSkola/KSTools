@@ -12,8 +12,8 @@ def read_cmd():
    parser.add_argument('-d','--download',dest='download',default=False,action="store_true", help='Download most up-to-date full tree?')
    parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
    parser.add_argument('-c','--content', dest='content', default="all", help='Which kind of content should we download? Options: video|exercise|article|topic')
-   parser.add_argument('-l','--list', dest='list', default=False,action="store_true", help='Only list topic names within given domain/subject/topic.')
-   parser.add_argument('--lang', dest='lang', default = 'en', help='Language of the topic tree. (US by default)')
+   parser.add_argument('-p','--print', dest='list', default=False, action="store_true", help='Only print topic names within given domain/subject/topic.')
+   parser.add_argument('-l', '--lang', dest='lang', default = 'en', help='Language of the topic tree. (US by default)')
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
@@ -60,20 +60,6 @@ if __name__ == "__main__":
     else:
         tree = khan_tree.get()
 
-    # Print all videos to csv file by default
-    if  what == 'video' or what == 'all':
-        # We are using set to get rid of duplicates
-        video_ids = set()
- 
-        #kapi_tree_print_videoids(tree, videos)
-        # Get YTID and readable_id of all videos, ready for printing
-        khan_tree.get_video_ids(video_ids)
- 
-        with open("allvideos_ids.dat","w") as out:
-            for v in video_ids:
-                out.write(v)
-
-
     if subject_title == 'root':
         subtree = tree
     else:
@@ -90,6 +76,28 @@ if __name__ == "__main__":
         else:
             print("ERROR: Could not find topic titled: "+subject_title)
             sys.exit(1)
+
+
+    # Print unique videos to csv file by default
+    if  what in ('video', 'exercise', 'all'):
+        ids = set()
+        data = []
+        keys = ()
+        if what == 'video' or what == 'all':
+            keys = ('youtube_id', 'readable_id', 'duration')
+        else:
+            keys = ('slug', )
+
+        khan_tree.get_unique_content_data(ids, data, keys, subtree)
+ 
+        with open("unique_content.dat", "w") as f:
+            for v in data:
+                line = ''
+                for k in keys:
+                    line += "%s " % (v[k])
+                line += '\n'
+                f.write(line)
+
     
     # Making large table of data for a given subject
     # Note that this unfortunately only work at the subject level,

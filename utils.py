@@ -23,19 +23,19 @@ def epprint(*args, **kwargs):
     pprint(*args, stream=sys.stderr, **kwargs)
 
 def save_obj_text(obj, name ):
-    with open(name + '.pkl', 'wb') as f:
+    with open(name, 'wb') as f:
         pickle.dump(obj, f, 0)
 
 def save_obj_bin(obj, name ):
-    with open(name + '.pkl', 'wb') as f:
+    with open(name, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
 def load_obj_bin(name ):
-    with open(name + '.pkl', 'rb') as f:
+    with open(name, 'rb') as f:
         return pickle.load(f)
 
 def load_obj_text(name ):
-    with open(name + '.pkl', 'rb') as f:
+    with open(name, 'rb') as f:
         return pickle.load(f)
 
 # taken from: https://gist.github.com/seanh/93666

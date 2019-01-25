@@ -11,6 +11,7 @@ def read_cmd():
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
    parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
+   parser.add_argument('-l','--lang', dest='lang', default='en', help='Language of LTT.')
    return parser.parse_args()
 
 def print_children_titles(content_tree):
@@ -39,7 +40,8 @@ if __name__ == "__main__":
             else:
                 ytids.append(None)
 
-    tree = load_ka_tree('video')
+    khan_tree = KhanContentTree(opts.lang, 'video')
+    tree = khan_tree.get()
 
     if subject_title == 'root':
         subtree = tree

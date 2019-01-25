@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import json, sys
+import json, sys, os
 import requests 
 from pprint import pprint
 from utils import load_obj_bin, save_obj_bin
@@ -19,7 +19,7 @@ kapi_headers = {
    'format': 'json'
 }
 
-EXIT_ON_HTTP_ERROR = False
+_EXIT_ON_HTTP_ERROR = False
 
 
 class KhanAPI:
@@ -49,7 +49,7 @@ class KhanAPI:
             except:
                 # Catch exception when r.json is empty
                 pass
-            if EXIT_ON_HTTPERROR:
+            if _EXIT_ON_HTTPERROR:
                 sys.exit(1)
             else:
                 return {}
@@ -69,7 +69,8 @@ class KhanAPI:
     def download_topic_tree(self, content_type):
         """Content type can be 'video', 'exercise', 'article'"""
  
-        url = SERVER_URL + API2 + 'topics/topictree'
+        #url = SERVER_URL + API2 + 'topics/topictree'
+        url = SERVER_URL + DEFAULT_API_RESOURCE + 'topictree'
         body = {
             "kind": content_type
         }
@@ -82,13 +83,16 @@ class KhanContentTree():
     def __init__(self, locale, content_type):
         self.content_tree = None
         self.content_type = content_type
-        self.file_name = "khan_tree_" + locale + '_' + self.content_type + "_bin"
+        self.file_name = "khan_tree_" + locale + '_' + self.content_type + "_bin.pkl"
 
     def save(self, tree):
         save_obj_bin(tree, self.file_name)
         self.content_tree = tree
 
     def load(self):
+        if not os.path.isfile(self.file_name):
+            print("ERROR: Could not load content tree from file '%s'" % (self.file_name))
+            sys.exit(1)
         self.content_tree = load_obj_bin(self.file_name)
 
     def get(self):
@@ -96,24 +100,34 @@ class KhanContentTree():
             self.load()
         return self.content_tree
 
-    def get_video_ids(self, out_set, tree = None):
+    # This is a bit of a weird function, maybe we should just get rid of the unique bit
+    # and handle uniqueness outside of this function?
+    def get_unique_content_data(self, ids, out, keys, tree = None):
+        if type(ids) is not set or type(out) is not list:
+            print("ERROR: Invalid argument to get_unique_content_data!")
+            sys.exit(1)
+
         if tree is None:
             tree = self.content_tree
 
         if 'kind' not in tree.keys():
             print("ERROR: Could not find 'kind' attribute among:" )
             print(tree.keys())
-            print(tree['videos'][0].keys())
             sys.exit(1)
 
-        if tree["kind"] == "Video":
-            out_set.add(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
+        if tree["kind"].lower() == self.content_type and tree['id'] not in ids:
+            ids.add(tree['id'])
+            data = {}
+            for k in keys:
+                data[k] = tree[k]
+            out.append(data)
+
         elif tree["kind"] == "Topic":
             # This can happen if Topic includes only Exercises or Articles
             if len(tree["children"]) <= 0:
                 return
-            for c in tree["children"]:
-                get_video_ids(c, out_set)
+            for t in tree["children"]:
+                self.get_unique_content_data(ids, out, keys, t)
  
 
 def kapi_download_topic(topic, kind):
@@ -142,67 +156,6 @@ def kapi_download_videos_from_topic(topic):
 
     return json_response
 
-def kapi_download_topictree(what='all'):
-    """Argument can be 'video', 'exercise', 'article', 'topic' or 'all' """
-
-    if what == 'article':
-        url = SERVER_URL + API2 + 'topics/topictree'
-    else:
-        url = SERVER_URL + DEFAULT_API_RESOURCE + 'topictree'
-
-    etagfile = "KAtree_"+what+"_etag.dat"
-    etag = ""
-    try:
-        with open(etagfile, "r") as f:
-            etag = f.read()
-    except: 
-        pass
-
-    ka_headers = {
-       'Content-Type': 'application/json',
-       'format': 'json',
-       'If-None-Match':  etag
-    }
-
-    if what != "all" and what != "video":
-        body = {
-            "kind": what
-        }
-    else:
-        body = {}
-
-    try:
-        r = requests.get(url, params=body, headers=ka_headers )
-        r.raise_for_status()
-        if r.status_code == 304:
-            print("Topic tree up-to-date")
-            print("If you want to download anyway, remove file " + etagfile + " and run again.")
-            return None
-        json_response = r.json()
-    except requests.HTTPError as e:
-        print(e)
-        sys.exit(1)
-
-    # It seems that etag is not present in v2 api
-    if "etag" in r.headers:
-        with open(etagfile, "w") as f:
-            f.write(r.headers["etag"])
-    else:
-        print("Etag not found in response header.")
-        pass
-
-    return json_response
-
-
-def kapi_tree_print_videoids(tree, out_set):
-    if tree["kind"] == "Video":
-        out_set.add(tree["youtube_id"]+'  '+tree["readable_id"]+'\n')
-    elif tree["kind"] == "Topic":
-        if len(tree["children"]) <= 0:
-            # This can happen if Topic includes only Exercises or Articles
-           return
-        for c in tree["children"]:
-            kapi_tree_print_videoids(c, out_set)
 
 def kapi_tree_print_tutorials(tree, out_list):
     delim = ';'
@@ -318,11 +271,6 @@ def find_ka_topic(tree, title):
         result = find_ka_topic(c, title)
         if result is not None:
            return result
-    # Depth first search
-    #    else:
-    #        result = find_topic(c, title)
-    #        if result is not None:
-    #            return result
     return None
 
 def find_video_by_youtube_id(tree, ytid):
@@ -338,32 +286,14 @@ def find_video_by_youtube_id(tree, ytid):
     return None
 
 def kapi_tree_get_content_items(tree, out, content_type="all"):
-    # TODO: We need to make sure KA API returns only listed content...
+    if tree["kind"] != "Topic":
+        #if content_type == "all" or content_type == tree["content_kind"].lower():
+        if content_type == "all" or content_type == tree["kind"].lower():
+            out.append(tree)
+        return out
 
-    #TODO: Filter out based on "hide" attribute (although it is supposedly deprecated...)
-#    if 'children' not in tree.keys() or len(tree['children']) == 0:
-    try:
-        # DH DEBUG
-        if tree["kind"] != "Topic":
-            #if content_type == "all" or content_type == tree["content_kind"].lower():
-            if content_type == "all" or content_type == tree["kind"].lower():
-                out.append(tree)
-            return out
-    except:
-        pprint(tree)
-        pprint(out)
-        raise
-
-    try:
-        for c in tree['children']:
-            kapi_tree_get_content_items(c, out)
-    except:
-        pprint(tree)
-        pprint(out)
-        raise
+    for c in tree['children']:
+        kapi_tree_get_content_items(c, out)
 
     return out
-
-def load_ka_tree(content):
-    return load_obj_bin("KAtree_"+content+"_bin")
 
