@@ -78,6 +78,7 @@ class KhanAPI:
         return json_response
 
 
+# We want this to be decoupled from KhanAPI object to allow for off-line use
 class KhanContentTree():
 
     def __init__(self, locale, content_type):
@@ -92,6 +93,7 @@ class KhanContentTree():
     def load(self):
         if not os.path.isfile(self.file_name):
             print("ERROR: Could not load content tree from file '%s'" % (self.file_name))
+            # TODO: Try to download Khan Tree here
             sys.exit(1)
         self.content_tree = load_obj_bin(self.file_name)
 
@@ -266,12 +268,13 @@ def find_ka_topic(tree, title):
         return None
     # Breadth first search
     for c in tree['children']:
-        if c['title'] == title:
+        if c['title'] == title or c['slug'] == title:
             return c
         result = find_ka_topic(c, title)
         if result is not None:
            return result
     return None
+
 
 def find_video_by_youtube_id(tree, ytid):
     if "children" not in tree.keys() or len(tree['children']) == 0:
@@ -285,15 +288,14 @@ def find_video_by_youtube_id(tree, ytid):
            return result
     return None
 
-def kapi_tree_get_content_items(tree, out, content_type="all"):
+
+def kapi_tree_get_content_items(tree, content, content_type="all"):
     if tree["kind"] != "Topic":
         #if content_type == "all" or content_type == tree["content_kind"].lower():
         if content_type == "all" or content_type == tree["kind"].lower():
-            out.append(tree)
-        return out
+            content.append(tree)
+        return
 
     for c in tree['children']:
-        kapi_tree_get_content_items(c, out)
-
-    return out
+        kapi_tree_get_content_items(c, content)
 
