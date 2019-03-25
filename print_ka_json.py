@@ -67,8 +67,6 @@ if __name__ == '__main__':
     if not subtree:
         print("ERROR: Could not find subtree for course: %s\n" % (topic_title))
         print(subtree)
-        # DH hack
-        #subtree = tree
         sys.exit(1)
 
     content = []
@@ -201,7 +199,7 @@ if __name__ == '__main__':
             break
         subtree = find_ka_topic(tree, crs)
         temp_content = []
-        temp_content =  kapi_tree_get_content_items(subtree, temp_content, content_type)
+        kapi_tree_get_content_items(subtree, temp_content, content_type)
         for c in temp_content:
             unique_content_ids.add(c['id']) 
 
@@ -235,7 +233,7 @@ if __name__ == '__main__':
         'subjects': {
             'math': '9-03',
             'music': '9-11',
-            'astro': '9-9' # TODO: 9-10' # Not clear whetherwe can have multiple types
+            'astro': '9-09' # TODO: 9-10' # Not clear whetherwe can have multiple types
         },
         'grades': {
             'early': '3-Z13',
@@ -282,13 +280,17 @@ if __name__ == '__main__':
             'datum_vzniku' : v['creation_date'],
             'vzdelavaci_obor': ppuc_data['subjects'][subject],
             'typ': ppuc_data['ct_types'][content_type],
-            'rocnik': ppuc_data['grades'][course],
             'stupen_vzdelavani': ppuc_data['stupen'][course],
             'gramotnost': ppuc_data['gramotnost'][subject]
             # KA API gives keywords in EN, commenting out for now....
 #            'klicova_slova': v['keywords'],
 #            'otevreny_zdroj': '7-ANO',
           }
+
+          # Do not export empty fieds...TODO: should make this more general
+          if course in ppuc_data['grades'].keys() and ppuc_data['grades'][course] != '':
+              item['rocnik'] = ppuc_data['grades'][course]
+
           if 'ka_user_licence' in v.keys():
              item['licence'] = ppuc_data['licenses'][v['ka_user_license']]
           else:
