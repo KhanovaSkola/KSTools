@@ -12,8 +12,8 @@ function compare_reference {
   fi
 }
 
-SYNC=true
-DOWNLOAD=true
+SYNC=false
+DOWNLOAD=false
 
 if [[ $DOWNLOAD = 'true' ]];then
   ../download_KAtree.py -l cs -c video
@@ -28,26 +28,17 @@ if [[ $DOWNLOAD = 'true' ]];then
   fi
 fi
 
-courses=('cosmology-and-astronomy' 'early-math' 'arithmetic' \
-  'trigonometry' 'basic-geo' 'pre-algebra' 'algebra-basics' 'music')
+../ka_content_linking.py -a -c video 2>error.log
+if [[ $? -ne 0 ]];then
+  echo "ERROR: Could not print videos"
+  exit 1
+fi
 
-# TODO: Use these iterations in Python, will be much faster, can load tree only once per content type
-# Need to refactor the python script first
-for course in ${courses[@]}
-do
-  ../ka_content_linking.py -s $course -c video
-  if [[ $? -ne 0 ]];then
-    echo "ERROR: Could not get videos for course $course"
-    exit 1
-  fi
-#  compare_reference $course "video"
-  ../ka_content_linking.py -s $course -c exercise
-  if [[ $? -ne 0 ]];then
-    echo "ERROR: Could not get exercises for course $course"
-    exit 1
-  fi
-#  compare_reference $course "exercise"
-done
+../ka_content_linking.py -a -c exercise 2>>error.log
+if [[ $? -ne 0 ]];then
+  echo "ERROR: Could not print exercises"
+  exit 1
+fi
 
 if [[ $SYNC != "true" ]];then
   exit 0

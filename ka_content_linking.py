@@ -9,8 +9,9 @@ def read_cmd():
    """Reading command line options."""
    desc = "Program for linking CS-Khan content for EMA reputation system."
    parser = argparse.ArgumentParser(description=desc)
-   parser.add_argument('-s','--subject', dest='subject', default='root', help='Link given course.')
-   parser.add_argument('-c','--content', dest='content', default='', help='Content kind: video|exercise')
+   parser.add_argument('-s','--subject', dest='subject', default = 'root', help = 'Link given course.')
+   parser.add_argument('-c','--content', dest='content', help = 'Content kind: video|exercise')
+   parser.add_argument('-a','--all', dest = 'all', action = 'store_true', help = 'Print all available courses')
    # TODO: Add verbose parameter
    return parser.parse_args()
 
@@ -75,46 +76,10 @@ def read_listed_content_slugs(listed_content_file):
 
     return listed_content
 
-
-if __name__ == '__main__':
-
-    opts = read_cmd()
-    course = opts.subject
-    content_type = opts.content.lower()
-
-    if content_type not in CONTENT_TYPES:
-        print("ERROR: content argument: ", opts.content)
-        print("Possibilities are: ", CONTENT_TYPES)
-        exit(1)
-
-    # Handle duplicities across courses
-    # The ordering here is important!
-    math_courses = ['early-math', 'arithmetic', 'basic-geo', 'trigonometry', 'algebra-basics', 'pre-algebra']
-    available_courses = math_courses
-    available_courses.append('music')
-    available_courses.append('cosmology-and-astronomy')
-
-    if course not in available_courses:
-        eprint('ERROR: Invalid course! Valid course are:')
-        eprint(courses)
-        sys.exit(1)
-
-    khan_tree = KhanContentTree('cs', content_type)
-    tree = khan_tree.get()
-
-    subtree = find_ka_topic(tree, course)
-
-    if not subtree:
-        print("ERROR: Could not find subtree for course: %s\n" % (course))
-        sys.exit(1)
-
-    content = []
+def ema_print_course_content(course, content, content_type):
     ema_content = []
     unique_content_ids = set()
 
-    kapi_tree_get_content_items(subtree, content, content_type)
-#    pprint(content[0].keys())
-        
     # KA API returns unlisted content as well, need to deal with that externally
     listed_content = read_listed_content_slugs(LISTED_CONTENT_FILE)
 
@@ -132,6 +97,7 @@ if __name__ == '__main__':
     subject = course_subject_map[course]
 
     # Go through all "preceding" math courses
+    # TODO: Handle duplicities accross all domains
     for crs in math_courses:
         if crs == course:
             break
@@ -207,5 +173,47 @@ if __name__ == '__main__':
     with open('ka_%s_%s.json' % (course.replace('-', '_').lower(), content_type), 'w', encoding = 'utf-8') as out:
         out.write(json.dumps(ema_content, ensure_ascii=False))
 
-    print("Number of EMA content items in %s = %d" % (course, len(ema_content)))
+    print("Number of EMA %s in %s = %d" % (content_type, course, len(ema_content)))
+
+
+if __name__ == '__main__':
+
+    opts = read_cmd()
+    course = opts.subject
+    content_type = opts.content.lower()
+
+    if content_type not in CONTENT_TYPES:
+        print("ERROR: content argument: ", opts.content)
+        print("Possibilities are: ", CONTENT_TYPES)
+        exit(1)
+
+    # Handle duplicities across courses
+    # The ordering here is important!
+    math_courses = ['early-math', 'arithmetic', 'basic-geo', 'trigonometry', 'algebra-basics', 'pre-algebra']
+    available_courses = math_courses
+    available_courses.append('music')
+    available_courses.append('cosmology-and-astronomy')
+
+    if opts.all:
+        courses = available_courses
+    else:
+        courses = [course]
+        if course not in available_courses:
+            eprint('ERROR: Invalid course! Valid course are:')
+            eprint(courses)
+            sys.exit(1)
+
+    khan_tree = KhanContentTree('cs', content_type)
+    tree = khan_tree.get()
+
+    for c in courses:
+        subtree = find_ka_topic(tree, c)
+        if not subtree:
+            print("ERROR: Could not find subtree for course: %s\n" % (c))
+            sys.exit(1)
+
+        content = []
+        kapi_tree_get_content_items(subtree, content, content_type)
+        
+        ema_print_course_content(c, content, content_type)
 
