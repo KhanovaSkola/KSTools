@@ -66,7 +66,6 @@ if __name__ == '__main__':
 
     if not subtree:
         print("ERROR: Could not find subtree for course: %s\n" % (topic_title))
-        print(subtree)
         sys.exit(1)
 
     content = []
@@ -90,6 +89,7 @@ if __name__ == '__main__':
                 l = line.split()
                 if len(l) < 2 and len(l) > 3:
                     print("Fatal error in reading file;", ksid_ytid_map_file)
+                    sys.exit(1)
                 ksid = l[0]
                 ytid = l[1]
                 ytid_ksid_map[ytid] = ksid
@@ -159,15 +159,23 @@ if __name__ == '__main__':
 
 
     # Printing for PPUC reputation site
+
+    # TODO: Get rid of this and just use slugs everywhere
+    #math_courses = ('early-math', 'arithmetic', 'basic-geo', 'trigonometry', 'algebra-basics', 'pre-algebra')
+    #courses = math_courses
+    #courses.append('music')
+    #courses.append('mology-and-astronomy')
+    #course = topic_title
+
     courses = {
-        'Early math': 'early',
-        'Arithmetic': 'arith',
-        'Trigonometry': 'trig',
-        'Basic geometry': 'basicgeo',
-        'Pre-algebra': 'prealg',
-        'Algebra basics': 'basicalg',
-        'Music': 'music',
-        'Cosmology and astronomy': 'astro'
+        'early-math': 'early',
+        'arithmetic': 'arith',
+        'trigonometry': 'trig',
+        'basic-geo': 'basicgeo',
+        'pre-algebra': 'prealg',
+        'algebra-basics': 'basicalg',
+        'music': 'music',
+        'cosmology-and-astronomy': 'astro'
     }
 
     course_subject_map = {
@@ -184,15 +192,15 @@ if __name__ == '__main__':
     try:
         course = courses[topic_title]
     except:
-        print('Invalid course! Valid course are:')
-        pprint(courses)
-        raise
+        eprint('ERROR: Invalid course! Valid course are:')
+        eprint(courses)
+        sys.exit(1)
 
     subject = course_subject_map[course]
 
     # Handle duplicities across courses
     # The ordering here is important!
-    math_courses = ('Early math', 'Arithmetic', 'Basic geometry', 'Trigonometry', 'Algebra basics', 'Pre-algebra')
+    math_courses = ('early-math', 'arithmetic', 'basic-geo', 'trigonometry', 'algebra-basics', 'pre-algebra')
     # Go through all "preceding" math courses
     for crs in math_courses:
         if crs == topic_title:
@@ -256,11 +264,11 @@ if __name__ == '__main__':
     for v in content:
 
         if v['id'] not in listed_content and v['slug'] not in listed_content:
-            print('Not listed: ' + v['slug'])
+            eprint('Not listed: ' + v['slug'])
             continue
 
         if v['id'] in unique_content_ids:
-            print("Found in previous math course, skipping: ", v['slug'])
+            eprint("Found in previous math course, skipping: ", v['slug'])
             continue
         else:
             unique_content_ids.add(v['id'])
@@ -300,22 +308,18 @@ if __name__ == '__main__':
               if v['ka_user_licence'] == 'yt-standard':
                 item['licence_url'] = 'https://www.youtube.com/static?template=terms&gl=CZ'
               else:
-                print('Missing license URL!')
+                eprint("WARNING: Missing license URL!")
                 del item['licence']
 
           ppuc_content.append(item)
 
         except:
-            print('Key error!')
-            pprint(v)
+            eprint('Key error!')
+            eprint(v)
             raise
  
-    with open('ka_%s_%s.json' % (topic_title.replace(' ', '_').lower(), content_type), 'w', encoding = 'utf-8') as out:
+    with open('ka_%s_%s.json' % (topic_title.replace(' ', '_').replace('-', '_').lower(), content_type), 'w', encoding = 'utf-8') as out:
         out.write(json.dumps(ppuc_content, ensure_ascii=False))
 
-    print("Number of PPUC content items = %d" % len(ppuc_content))
-#    print("Number of unique ids = %d" % (len(unique_content_ids)))
-
-
-#    pprint(content[-1])
+    print("Number of EMA content items in %s = %d" % (course, len(ppuc_content)))
 

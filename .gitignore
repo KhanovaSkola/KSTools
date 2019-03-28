@@ -12,6 +12,9 @@ SYNC/*
 DATA/*
 subs/*
 SECRETS/*
+LINKING/*csv
+LINKING/*json
+LINKING/*pkl
 
 
 # Byte-compiled / optimized / DLL files
