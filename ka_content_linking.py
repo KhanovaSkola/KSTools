@@ -7,29 +7,19 @@ import json
 
 def read_cmd():
    """Reading command line options."""
-   desc = "Program for linking Khan content for PPUC reputation system."
+   desc = "Program for linking CS-Khan content for EMA reputation system."
    parser = argparse.ArgumentParser(description=desc)
-   parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
-   parser.add_argument('-c','--content', dest='content', default='', help='Which kind of content should we download? Options: video|exercise|article|topic')
-   parser.add_argument('-l','--list', dest='list', default=False, action='store_true', help='Only list topic names within given domain/subject/topic.')
-   parser.add_argument('-b','--bakalari', dest='bakalari', default=False, action='store_true', help='Print info for Bakalari linking.')
+   parser.add_argument('-s','--subject', dest='subject', default='root', help='Link given domain/subject.')
+   parser.add_argument('-c','--content', dest='content', default='', help='Content kind: video|exercise|article|topic')
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
 CONTENT_TYPES = ['video', 'article', 'exercise', 'topic']
 LISTED_CONTENT_FILE = 'indexable_slugs.txt'
+#TODO
+SKIPPED_CONTENT_FILE = 'skipped_slugs.txt'
 
-
-def print_children_titles(content_tree):
-    for child in content_tree['children']:
-       pprint(child['title'])
-
-
-def print_dict_without_children(dictionary):
-    for k in dictionary.keys():
-        if k != 'children':
-            print(k, dictionary[k])
-
+# TODO: Rename this function, re-use for skipped content
 def read_listed_content_slugs(listed_content_file):
     listed_content = set()
     with open(listed_content_file, 'r') as f:
@@ -48,7 +38,6 @@ if __name__ == '__main__':
     opts = read_cmd()
     topic_title  = opts.subject
     content_type = opts.content.lower()
-    lst = opts.list
 
     if content_type not in CONTENT_TYPES:
         print("ERROR: content argument: ", opts.content)
@@ -77,88 +66,6 @@ if __name__ == '__main__':
         
     # KA API returns unlisted content as well, need to deal with that externally
     listed_content = read_listed_content_slugs(LISTED_CONTENT_FILE)
-
-    # Printing for Bakalari`
-    if opts.bakalari:
-        ksid_ytid_map_file = 'ka_indexable_ytid_ksid_map.dat'
-        unique_content_ids = set()
-        ytid_ksid_map = {}
-        ytid_on_ks = set()
-        with open(ksid_ytid_map_file, 'r') as f:
-            for line in f:
-                l = line.split()
-                if len(l) < 2 and len(l) > 3:
-                    print("Fatal error in reading file;", ksid_ytid_map_file)
-                    sys.exit(1)
-                ksid = l[0]
-                ytid = l[1]
-                ytid_ksid_map[ytid] = ksid
-                if len(l) == 3:
-                    ytid_original = l[2]
-                    ytid_ksid_map[ytid_original] = ksid
-                ytid_on_ks.add(ytid)
-
-
-        ka = KhanAPI('cs')
-        with open('bakalari_relinking_%s_%s.csv' % (topic_title.replace(' ', '_').lower(), content_type), 'w', encoding = 'utf-8') as out:
-            for c in content:
-                # Take care of duplicates (we're assuming that we're looking at the whole Math at once
-                if c['id'] not in unique_content_ids:
-                    unique_content_ids.add(c['id'])
-                else:
-                    continue
-
-                # Bakalari fields
-                dodavatel = 'Khan Academy'
-                culture = '--'
-                lang = {
-                    'audio': 'CZ',
-                    'subtitles': '--',
-                    'text': 'CZ'
-                }
-
-                ytid = c['youtube_id']
-                translated_ytid = c['translated_youtube_id']
-                vid = c
-                # Here we workaround a bug in API which sometimes seems to return wrong youtube_id
-                if c['youtube_id'] == c['translated_youtube_id']:
-                    vid = ka.download_video(c['readable_id'])
-                    if vid:
-                        ytid = vid['youtube_id']
-                    else:
-                        print(c)
-                        print("ERROR: Could not find video, ytid = ", ytid)
-                        sys.exit(1)
-                    #print(c)
-
-                # Subtitled video, modify fields accordingly
-                # Unfortunatelly, we cannot properly detect dubbed videos for now...
-                if vid['youtube_id'] == vid['translated_youtube_id']:
-                    lang = {
-                        'audio': 'EN',
-                        'subtitles': 'CS',
-                        'text': 'EN'
-                    }
-
-                # Strip newlines (not tested) and occacional semicolons
-                vid['translated_title'].replace('\n','').replace(';',',')
-                vid['translated_description'].replace('\n','').replace(';',',')
-
-                if ytid in ytid_ksid_map.keys():
-                    out.write('%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n' % (ytid_ksid_map[ytid],
-                        vid['id'], vid['translated_title'], vid['translated_description'], vid['ka_url'],
-                        dodavatel, lang['audio'], lang['subtitles'], lang['text'], culture))
-                elif translated_ytid in ytid_ksid_map.keys():
-                    out.write('%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n' % (ytid_ksid_map[translated_ytid],
-                        vid['id'], vid['translated_title'], vid['translated_description'], vid['ka_url'],
-                        dodavatel, lang['audio'], lang['subtitles'], lang['text'], culture))
-
-        print("Number of retrieved content items = ", len(unique_content_ids))
-        print("Number of videos on Khanova skola = ", len(ytid_on_ks))
-        sys.exit(0)
-
-
-    # Printing for PPUC reputation site
 
     # TODO: Get rid of this and just use slugs everywhere
     #math_courses = ('early-math', 'arithmetic', 'basic-geo', 'trigonometry', 'algebra-basics', 'pre-algebra')
@@ -214,6 +121,7 @@ if __name__ == '__main__':
     if subject == 'math':
         print("Number of unique ids from preceding math courses = %d" % (len(unique_content_ids)))
 
+    # TODO: Make ppuc_data keys same with json keys
     ppuc_data = {
         'lang': '5-cs',
          'source_type': '7-ANO', # OER
@@ -285,6 +193,7 @@ if __name__ == '__main__':
             'jazyk': ppuc_data['lang'],
             'dostupnost': ppuc_data['source_type'],
             # Optional fields
+            # TODO: Creation date might not make sense...
             'datum_vzniku' : v['creation_date'],
             'vzdelavaci_obor': ppuc_data['subjects'][subject],
             'typ': ppuc_data['ct_types'][content_type],
