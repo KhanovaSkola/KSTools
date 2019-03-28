@@ -19,16 +19,6 @@ def read_cmd():
 # Currently, article type does not seem to work.
 AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial', 'all']
 
-
-def print_children_titles(content_tree):
-    for child in content_tree["children"]:
-       pprint(child['title'])
-
-def print_dict_without_children(dictionary):
-    for k in dictionary.keys():
-        if k != 'children':
-            print(k, dictionary[k])
-
 if __name__ == "__main__":
 
     opts = read_cmd()

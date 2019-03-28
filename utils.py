@@ -58,7 +58,7 @@ an invalid filename."""
 
 def print_children_titles(content_tree):
     for child in content_tree['children']:
-       pprint(child['title'])
+       print(child['title'], child['slug'])
 
 def print_dict_without_children(dictionary):
     for k in dictionary.keys():
