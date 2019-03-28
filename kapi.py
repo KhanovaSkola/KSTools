@@ -29,6 +29,7 @@ class KhanAPI:
             self.server_url = 'https://www.khanacademy.org'
         else:
             self.server_url = 'https://' + locale + '.khanacademy.org'
+        self.default_api_resource = '/api/v1/'
         self.session = requests.Session()
         self.headers = {
             'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ class KhanAPI:
         # Searching by YTID is deprecated but seems to work,
         # even searching by translated_youtube_id
         # Instead_ we should be calling this by readable_id
-        url = SERVER_URL + DEFAULT_API_RESOURCE + 'videos/'  + YTID
+        url = self.server_url + self.default_api_resource + 'videos/'  + YTID
         json_response = self._get_url(url)
         return json_response
 
@@ -69,8 +70,8 @@ class KhanAPI:
     def download_topic_tree(self, content_type):
         """Content type can be 'video', 'exercise', 'article'"""
  
-        #url = SERVER_URL + API2 + 'topics/topictree'
-        url = SERVER_URL + DEFAULT_API_RESOURCE + 'topictree'
+        #url = self.server_url + API2 + 'topics/topictree'
+        url = self.server_url + self.default_api_resource + 'topictree'
         body = {
             "kind": content_type
         }
