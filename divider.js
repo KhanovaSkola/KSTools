@@ -1,57 +1,74 @@
 Divider.translateHint = function(locale, string) {
-
-    if (locale === 'en')
-        return string;
     
     var stringTranslations = {
-        ' with a remainder of ': {
+        'with_remainder_of': {
+            'en': ' with a remainder of ',
             'cs': ' se zbytkem ',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        'The remainder is 0, so we have our answer.': {
+        'remainder_is_0': {
+            'en': 'The remainder is 0, so we have our answer.',
             'cs': 'Zbytek je 0, takže máme výsledek!',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}': {
+        'remainder_less_than_divisor': {
+            'en': '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}',
             'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        'R}': { // as in 'Remainder'
+        'remainder_shorthand': {
+            'en': 'R}',
             'cs': 'zb.}~~',
+            'hu': 'hungarian translation',
             'fr': 'et r} = ',
         },
         
-        '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}': {
-            'cs' : "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}",
+        'how_many_times_divisor_into_value': {
+            'en': '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}',
+            'cs': "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}",
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        'Write in a decimal and a zero.': {
+        'write_decimal': {
+            'en': 'Write in a decimal and a zero.',
             'cs': 'Zapiš jako desetinné číslo a připiš nulu.',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        "Shift the decimal 1 to the right.": {
+        "shift_decimal_1_right": {
+            'en': 'Shift the decimal 1 to the right.',
             'cs': 'Posuň desetinnou čárku o 1 místo doprava.',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         // We lack a proper multiple plural support, 
         // but here the %(num)s should be mostly 2-4
-        "Shift the decimal %(num)s to the right.": {
+        "shift_decimal_num_right": {
+            'en': 'Shift the decimal %(num)s to the right',
             'cs': 'Posuň desetinnou čárku o %(num)s místa doprava.',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        "Bring the decimal up into the": {
+        "bring_decimal_up": {
+            'en': 'Bring the decimal up into the',
             'cs': 'Zkopíruj desetinnou čárku do výsledku',
+            'hu': 'hungarian translation',
             'fr': '',
         },
         
-        "answer (the quotient).": {
+        "answer_quotient": {
+            'en': "answer (the quotient).",
             'cs': 'TODO-cs: Untranslated',
+            'hu': 'hungarian translation',
             'fr': '',
         }
     };
@@ -237,8 +254,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     this.shiftDecimals = function() {
         this.clearArray(decimals);
         temporaryLabel = graph.label([dx, 1],
-            $.ngettext("\\text{" + Divider.translateHint(locale, "Shift the decimal 1 to the right.")+"}",
-                       "\\text{" + Divider.translateHint(locale, "Shift the decimal %(num)s to the right.")+"}",
+            $.ngettext("\\text{" + Divider.translateHint(locale, "shift_decimal_1_right")+"}",
+                       "\\text{" + Divider.translateHint(locale, "shift_decimal_num_right")+"}",
                        deciDivisor),
             "right");
 
@@ -269,10 +286,10 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         }
 
         // TODO(jeresig): i18n: This probably won't work in multiple langs
-        graph.label([dx, 1.2], $._("\\text{" + Divider.translateHint(locale, "Bring the decimal up into the")+"}"), "right");
+        graph.label([dx, 1.2], $._("\\text{" + Divider.translateHint(locale, "bring_decimal_up")+"}"), "right");
         
         if (locale === 'en') {
-            graph.label([dx, 0.8], $._("\\text{"+Divider.translateHint(locale, "answer (the quotient).")+"}"), "right");
+            graph.label([dx, 0.8], $._("\\text{"+Divider.translateHint(locale, "answer_quotient")+"}"), "right");
             this.addDecimals([[digitsDividend.length + deciDiff - 0.5, 0.9]]);
 
         } else {
@@ -284,7 +301,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
 
     this.showDivisionStep = function(division) {
         // Write question
-        var question = $._(Divider.translateHint(locale, '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}'),
+        var question = $._(Divider.translateHint(locale, 'how_many_times_divisor_into_value'),
                         {divisor: divisor, value: currentValue});
 
         if (currentValue >= divisor) {
@@ -372,7 +389,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
                 "\\blue{" + currentValue + "}" +
                 divSign + divisor + "=" +
                 "\\green{" + result + "}" +
-                "\\text{" + $._(Divider.translateHint(locale, ' with a remainder of ')) + " }" +
+                "\\text{" + $._(Divider.translateHint(locale, 'with_remainder_of')) + " }" +
                 "\\pink{" + remainder + "}",
                 "right");
         }
@@ -399,25 +416,21 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         drawDigits([0], decx1+0.5, 0);
         this.addDecimals([[decx1, decy1], [decx2, decy2]]);
         
-        var txt_en = 'Write in a decimal and a zero.';
         var ly = 1;
         if (locale != 'en') {
             ly = 1.5;
         }
-        graph.label([dx, ly], $._('\\text{'+Divider.translateHint(locale, txt_en)+'}'), "right");
+        graph.label([dx, ly], $._('\\text{'+Divider.translateHint(locale, 'write_decimal')+'}'), "right");
     };
 
     this.showRemainder = function(remainder) {
-        var txt, txt_en;
+        var txt;
         if (remainder === 0) {
-            txt_en = "The remainder is 0, so we have our answer.";
-            txt = "\\text{" + $._(Divider.translateHint(locale, txt_en)) + "}";
+            txt = "\\text{" + $._(Divider.translateHint(locale, 'remainder_is_0')) + "}";
         } else {
-            txt_en = '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}';
-            txt = $._(Divider.translateHint(locale, txt_en),
+            txt = $._(Divider.translateHint(locale, 'remainder_less_than_divisor'),
                     { remainder: remainder, divisor: divisor });
-            var remainderShorthand = '\\text{' + Divider.translateHint(locale, "R}");
-            
+            var remainderShorthand = '\\text{' + Divider.translateHint(locale, 'remainder_shorthand');
             var dxRemainder = 0.0;
             if (locale === 'en') {
                 dxRemainder = digitsDividend.length;
