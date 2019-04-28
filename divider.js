@@ -374,6 +374,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         if (locale === 'cs' && ! fOnlyZeros && fFirstResult) {
             graph.path([[dxHint+0.5+index, 0.1], [dxHint+0.5+index, 0.4], [dxHint+index, 0.4]]);
             fFirstResult = false;
+        } else if (locale === 'hu') {
+            graph.path([[dxHint+0.5+index, 0.2], [dxHint+0.5+index, 0.4]]);
         }
         
         // Leading zeros except one before a decimal point and those after
