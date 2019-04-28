@@ -1,3 +1,26 @@
+var LOCALE= 'en';
+//example 25 : 4
+var DIVIDEND = 25;
+var DIVISOR = 4;
+// Increment this number by one to get successive hints
+var NUMBER_OF_HINTS = 0;
+// false for division of whole numbers with a remainder
+// true for example in exercise converting_fractions_to_decimals
+var decimal_remainder = false; 
+
+// The following variables are relevant only for dividing decimals, which does not work yet
+// This is US decimal point
+var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
+// Rewritten here to decimal comma
+decimalPointSymbol = ',';
+// 3.045/0.35 = ?
+var DIVISOR_DECIMAL = 0;
+var DIVIDEND_DECIMAL = 0;
+
+/************************************************/
+// END OF USER INPUT
+/************************************************/
+
 Divider.translateHint = function(locale, string) {
     
     var stringTranslations = {
@@ -563,24 +586,6 @@ Divider.getHints = function(divisor, digitsDividend, deciDivisor, deciDividend, 
 
     return hints;
 };
-
-// The following is relevant only for dividing decimals, which does not work yet
-// This is US decimal point
-var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
-// Rewritten here to decimal comma
-decimalPointSymbol = ',';
-// 3.045/0.35 = ?
-var DIVISOR_DECIMAL = 0;
-var DIVIDEND_DECIMAL = 0;
-
-
-// MODIFY HERE
-var LOCALE= 'cs';
-//example 25 : 4
-var DIVIDEND = 25;
-var DIVISOR = 4;
-var NUMBER_OF_HINTS = 1;
-var decimal_remainder = false; //Set to false for division of whole numbers with a remainder
 
 graph.divider = new Divider(LOCALE, DIVISOR, DIVIDEND, DIVISOR_DECIMAL, DIVIDEND_DECIMAL, decimal_remainder);
     
