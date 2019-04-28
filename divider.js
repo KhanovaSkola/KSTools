@@ -1,5 +1,4 @@
 var LOCALE= 'en';
-//example 25 : 4
 var DIVIDEND = 25;
 var DIVISOR = 4;
 // Increment this number by one to get successive hints
@@ -9,11 +8,7 @@ var NUMBER_OF_HINTS = 0;
 var decimal_remainder = false; 
 
 // The following variables are relevant only for dividing decimals, which does not work yet
-// This is US decimal point
-var decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
-// Rewritten here to decimal comma
-decimalPointSymbol = ',';
-// 3.045/0.35 = ?
+// e.g. 3.045 / 0.35 = ?
 var DIVISOR_DECIMAL = 0;
 var DIVIDEND_DECIMAL = 0;
 
@@ -116,9 +111,21 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     var deciDiff = deciDivisor - deciDividend;
     var hints = Divider.getHints(divisor, digitsDividend, deciDivisor, deciDividend, decimalRemainder);
     var numHints = hints.length;
+    
+    // Taken from Translation Assistant
+    var decimalCommaLocales = ['cs', 'fr', 'de', 'pl', 'bg', 'nb', 'tr', 'da', 'sr', 'lol',
+            'ro', 'nl', 'hu', 'az', 'it', 'pt', 'pt-pt', 'sv', 'el'];
+    var decimalPointSymbol = ',';
+    if (decimalCommaLocales.includes(locale)) {
+        decimalPointSymbol = ',';
+    } else {
+        // This is US decimal point
+        decimalPointSymbol = icu.getDecimalFormatSymbols().decimal_separator;
+    }
+
     var divSign = "\\div";
     var divSigns = {
-        ":": ["cs", "pl"],
+        ":": ['cs', 'pl', 'hu'],
         "\\div": ["en"]
     };
     
