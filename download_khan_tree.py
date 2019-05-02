@@ -13,8 +13,8 @@ def read_cmd():
    parser.add_argument('-l', '--lang', dest='lang', default = 'en', help='Language of the topic tree. (US by default)')
    return parser.parse_args()
 
-# Currently, article type does not seem to work.
-AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial', 'all']
+# Currently, article type does not seem to work, not sure about topic and tutorial
+AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial']
 
 if __name__ == "__main__":
 

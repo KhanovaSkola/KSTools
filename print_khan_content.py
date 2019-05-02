@@ -10,31 +10,30 @@ def read_cmd():
    desc = "Program for printing Khan Academy content tree into CSV file." 
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
-   parser.add_argument('-c','--content', dest='content', default="all", help='Which kind of content should we download? Options: video|exercise|article|topic')
+   parser.add_argument('-c','--content', dest='content_type', required = True, help='Which kind of content should we download? Options: video|exercise|article|topic')
    parser.add_argument('-p','--print', dest='list', default=False, action="store_true", help='Only list topic names within given domain/subject/topic.')
    parser.add_argument('-l', '--lang', dest='lang', default = 'en', help='Language of the topic tree. (US by default)')
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
-AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial', 'all']
+AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial']
 
 if __name__ == "__main__":
 
     opts = read_cmd()
     subject_title  = opts.subject
-    what = opts.content
     lst = opts.list
 
 
-    if what not in AVAILABLE_CONTENT_TYPES:
-        print("ERROR: invalid content type argument:", opts.content)
+    if opts.content_type not in AVAILABLE_CONTENT_TYPES:
+        print("ERROR: invalid content type argument:", opts.content_type)
         print("Possibilities are:", content_types)
         exit(1)
 
-    if what == "tutorial" or what == "topic":
+    if opts.content_type == "tutorial" or opts.content_type == "topic":
         download_type = 'video'
     else:
-        download_type = what
+        download_type = opts.content_type
 
     khan_tree = KhanContentTree(opts.lang, download_type)
     tree = khan_tree.get()
@@ -59,11 +58,11 @@ if __name__ == "__main__":
 
 
     # Print unique videos to csv file by default
-    if  what in ('video', 'exercise', 'all'):
+    if  opts.content_type in ('video', 'exercise', 'all'):
         ids = set()
         data = []
         keys = ()
-        if what == 'video' or what == 'all':
+        if opts.content_type == 'video' or opts.content_type == 'all':
             keys = ('youtube_id', 'readable_id', 'duration')
         else:
             keys = ('slug', )
@@ -86,12 +85,12 @@ if __name__ == "__main__":
     content = []
     date = time.strftime("%d%m%Y")
     
-    if what == 'tutorial':
+    if opts.content_type == 'tutorial':
         kapi_tree_print_tutorials(subtree, content)
     else:
         kapi_tree_print_full(subtree, content)
 
-    filename = what+"_"+format_filename(subject_title)+"_"+date+".csv"
+    filename = opts.content_type + "_" + format_filename(subject_title) + "_" + date + ".csv"
     with open(filename, "w", encoding = 'utf-8') as f:
         for c in content:
             f.write(c)
