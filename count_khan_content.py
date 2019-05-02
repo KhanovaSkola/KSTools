@@ -9,7 +9,7 @@ def read_cmd():
    """Reading command line options."""
    desc = "Program for computing number and total duration of unique Khan videos per course."
    parser = argparse.ArgumentParser(description=desc)
-#   parser.add_argument('-s','--subject', dest='subject', default='root', help='Print full tree for a given domain/subject.')
+   parser.add_argument('-s','--subject', dest='topic', default = None, help='Count content for a given topic slug.')
    return parser.parse_args()
 
 # TODO: Exercises and articles currently not implemented
@@ -51,7 +51,8 @@ if __name__ == '__main__':
     print("|Course|total videos|unique videos|duration|total exercises|unique exercises|")
     print('|--|--|--|--|--|--|')
     courses = math_topics + physics_topics + chem_topics
-    courses = ['Organic chemistry']
+    if opts.topic is not None:
+        courses = [opts.topic]
     for course in courses: 
         video_duration = 0 # In seconds
         course_videos = []

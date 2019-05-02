@@ -115,7 +115,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     // Taken from Translation Assistant
     var decimalCommaLocales = ['cs', 'fr', 'de', 'pl', 'bg', 'nb', 'tr', 'da', 'sr', 'lol',
             'ro', 'nl', 'hu', 'az', 'it', 'pt', 'pt-pt', 'sv', 'el'];
-    var decimalPointSymbol = ',';
+    var decimalPointSymbol;
     if (decimalCommaLocales.includes(locale)) {
         decimalPointSymbol = ',';
     } else {
