@@ -57,8 +57,11 @@ an invalid filename."""
 # Some usefull functions for manipulating Khan content tree
 
 def print_children_titles(content_tree):
+    print("------------------------")
+    print("Topic title | Topic slug")
+    print("------------------------")
     for child in content_tree['children']:
-       print(child['title'], child['slug'])
+       print("%s|%s" % (child['title'], child['slug']))
 
 def print_dict_without_children(dictionary):
     for k in dictionary.keys():
