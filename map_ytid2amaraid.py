@@ -14,23 +14,19 @@ def read_cmd():
    return parser.parse_args()
 
 opts = read_cmd()
-infile = opts.input_file
-apifile = opts.apifile
 lang = opts.lang
 
 # List ytids may also contain filenames
 ytids = []
 # Reading file with YT id's
-with open(infile, "r") as f:
+with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
-# Amara API can be found in Settins->Account-> API Access (bottom-right corner)
-file = open(apifile, "r")
+# Amara API can be found in Settings -> Account -> API Access (bottom-right corner)
+file = open(opts.apifile, "r")
 API_KEY, USERNAME = file.read().split()[0:]
-#print('Using Amara username: '+USERNAME)
-#print('Using Amara API key: '+API_KEY)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -48,29 +44,23 @@ for i in range(len(ytids)):
         print("")
         continue
     ytid_from = ytids[i][0]
-    title = ''
-    if len(ytids[i]) > 2:
-        for t in ytids[i][1:]:
-            title = title + ' ' + t
 
     sys.stdout.flush()
     sys.stderr.flush()
 
     video_url = 'https://www.youtube.com/watch?v='+ytid_from
 
-    # Now check whether the video is already on Amara
-    # If not, create it.
+    # Check whether the video is already on Amara
     amara_response = check_video( video_url, amara_headers, s = ses)
     if amara_response['meta']['total_count'] == 0:
         #amara_response = add_video(video_url, lang, amara_headers)
         #amara_id = amara_response['id']
         #amara_title =  amara_response['title']
         #print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
-        print("Video not on Amara!",ytid_from)
+        print("Video not on Amara!", ytid_from)
     else:
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
-#        print(amara_response['objects'])
-        #print(amara_id,'\t',AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
-        print(AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
+        lang_present, sub_version = check_language(amara_id, opts.lang, amara_headers, s = ses)
+        print(AMARA_BASE_URL + opts.lang + '/subtitles/editor/' + amara_id + '/' + opts.lang, '\t', sub_version, '\t', amara_title)
 
