@@ -116,7 +116,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
     var decimalCommaLocales = ['cs', 'fr', 'de', 'pl', 'bg', 'nb', 'tr', 'da', 'sr', 'lol',
             'ro', 'nl', 'hu', 'az', 'it', 'pt', 'pt-pt', 'sv', 'el'];
     var decimalPointSymbol;
-    if (decimalCommaLocales.includes(locale)) {
+    if (decimalCommaLocales.indexOf(locale) !== -1) {
         decimalPointSymbol = ',';
     } else {
         // This is US decimal point
