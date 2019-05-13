@@ -50,7 +50,7 @@ Divider.translateHint = function(locale, string) {
         'how_many_times_divisor_into_value': {
             'en': '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}',
             'cs': "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}",
-            'hu': '$\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}$',
+            'hu': '\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}',
             'fr': '',
         },
         

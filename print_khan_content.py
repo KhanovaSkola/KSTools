@@ -90,6 +90,9 @@ if __name__ == "__main__":
     else:
         kapi_tree_print_full(subtree, content)
 
+    # TODO: Add info about whether video is dubbed or not,
+    # Need a separate call to kapi.download_video
+
     filename = opts.content_type + "_" + format_filename(subject_title) + "_" + date + ".csv"
     with open(filename, "w", encoding = 'utf-8') as f:
         for c in content:
