@@ -64,14 +64,8 @@ amara_headers = {
    'X-api-key': API_KEY,
    'format': 'json'
 }
-
-print("This is what I got from the input file:")
-print(ytids)
-
-answer = answer_me("Should I proceed?")
-if not answer:
-    sys.exit(1)
-
+# Create persistent HTTP session
+ses = requests.Session()
 
 # Main loop
 for i in range(len(ytids)):
@@ -115,7 +109,7 @@ for i in range(len(ytids)):
                 print("Successfully downloaded the video.")
 
         # First, get first Amara ID
-        amara_response = check_video( video_url_from, amara_headers)
+        amara_response = check_video( video_url_from, amara_headers, s = ses)
         if amara_response['meta']['total_count'] == 0:
             print("ERROR: Source video is not on Amara! YT id"+ytid_from)
             sys.exit(1)
@@ -127,7 +121,7 @@ for i in range(len(ytids)):
             print(AMARA_BASE_URL+'cs/videos/'+amara_id_from)
 
         # Check whether subtitles for a given language are present,
-        is_present, sub_version = check_language(amara_id_from, lang, amara_headers)
+        is_present, sub_version = check_language(amara_id_from, lang, amara_headers, s = ses)
         if is_present:
             print("Subtitle revision number: "+str(sub_version))
         else:
@@ -135,7 +129,7 @@ for i in range(len(ytids)):
             sys.exit(1)
  
         # Download and write subtitles from Amara for a given language
-        subs = download_subs(amara_id_from, lang, sub_format, amara_headers )
+        subs = download_subs(amara_id_from, lang, sub_format, amara_headers, s = ses)
         f = open(ytid_from +'.'+lang+'.srt', "w")
         f.write(subs)
         f.close()

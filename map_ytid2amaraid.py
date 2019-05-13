@@ -39,6 +39,9 @@ amara_headers = {
    'format': 'json'
 }
 
+# Create persistent HTTP session
+ses = requests.Session()
+
 # Main loop
 for i in range(len(ytids)):
     if len(ytids[i]) == 0:
@@ -57,7 +60,7 @@ for i in range(len(ytids)):
 
     # Now check whether the video is already on Amara
     # If not, create it.
-    amara_response = check_video( video_url, amara_headers)
+    amara_response = check_video( video_url, amara_headers, s = ses)
     if amara_response['meta']['total_count'] == 0:
         #amara_response = add_video(video_url, lang, amara_headers)
         #amara_id = amara_response['id']
@@ -67,6 +70,7 @@ for i in range(len(ytids)):
     else:
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
+#        print(amara_response['objects'])
         #print(amara_id,'\t',AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
         print(AMARA_BASE_URL+lang+'/subtitles/editor/'+amara_id+'/'+lang,'\t',title)
 
