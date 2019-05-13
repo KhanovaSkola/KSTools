@@ -22,49 +22,49 @@ Divider.translateHint = function(locale, string) {
         'with_remainder_of': {
             'en': ' with a remainder of ',
             'cs': ' se zbytkem ',
-            'hu': 'hungarian translation',
+            'hu': ' és a maradék ',
             'fr': '',
         },
         
         'remainder_is_0': {
             'en': 'The remainder is 0, so we have our answer.',
             'cs': 'Zbytek je 0, takže máme výsledek!',
-            'hu': 'hungarian translation',
+            'hu': 'maradék 0, tehát megvan a megoldás.',
             'fr': '',
         },
         
         'remainder_less_than_divisor': {
             'en': '\\text{Since } %(remainder)s \\text{ is less than } %(divisor)s \\text{, it is left as our remainder.}',
             'cs': '%(remainder)s \\text{ je menší než } %(divisor)s \\text{, takže nám zůstane jako zbytek.}',
-            'hu': 'hungarian translation',
+            'hu': '\\text{Mivel a } %(remainder)s \\text{ kisebb, mint a } %(divisor)s \\text{, ezért ez az osztás maradéka.}',
             'fr': '',
         },
         
         'remainder_shorthand': {
             'en': 'R}',
             'cs': 'zb.}~~',
-            'hu': 'hungarian translation',
+            'hu': 'M}~',
             'fr': 'et r} = ',
         },
         
         'how_many_times_divisor_into_value': {
             'en': '\\text{How many times does }%(divisor)s\\text{ go into }\\color{#6495ED}{%(value)s}\\text{?}',
             'cs': "\\text{Kolikrát se vejde }%(divisor)s\\text{ do  }\\color{#6495ED}{%(value)s}\\text{?}",
-            'hu': 'hungarian translation',
+            'hu': '$\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}$',
             'fr': '',
         },
         
         'write_decimal': {
             'en': 'Write in a decimal and a zero.',
             'cs': 'Zapiš jako desetinné číslo a připiš nulu.',
-            'hu': 'hungarian translation',
+            'hu': 'Tedd ki a tizedesvesszőt a hányados végére és írj a maradék mögé egy nullát!',
             'fr': '',
         },
         
         "shift_decimal_1_right": {
             'en': 'Shift the decimal 1 to the right.',
             'cs': 'Posuň desetinnou čárku o 1 místo doprava.',
-            'hu': 'hungarian translation',
+            'hu': 'Helyezd a tizedesvesszőt egy helyiértékkel jobbra!',
             'fr': '',
         },
         // We lack a proper multiple plural support, 
@@ -72,7 +72,7 @@ Divider.translateHint = function(locale, string) {
         "shift_decimal_num_right": {
             'en': 'Shift the decimal %(num)s to the right',
             'cs': 'Posuň desetinnou čárku o %(num)s místa doprava.',
-            'hu': 'hungarian translation',
+            'hu': 'Helyezd a tizedesvesszőt %(num)s helyiértékkel jobbra!',
             'fr': '',
         },
         
