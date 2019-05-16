@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-from kapi import *
-from utils import *
-import argparse, sys
-import time
+import argparse
+from sys import exit
 import json
 import psycopg2
+from utils import eprint
 
 # Figure out how to connect to PSQL from 
 # http://www.postgresqltutorial.com/postgresql-python/connect/
@@ -14,7 +13,7 @@ def read_cmd():
    desc = "Program for linking CS-Khan content for EMA reputation system."
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('-p','--password', dest = 'password', required = False, help = 'Postgres password')
-   parser.add_argument('-s','--schema', dest='schema', default = 'root', help = 'Link given schema.')
+   parser.add_argument('-s','--schema', dest='schema', default = None, help = 'Link given schema.')
    parser.add_argument('-a','--all', dest = 'all', action = 'store_true', help = 'Print all available schemas')
    # TODO: Add verbose parameter
    return parser.parse_args()
@@ -22,10 +21,17 @@ def read_cmd():
 # Currently, article type does not seem to work.
 CONTENT_TYPES = ['video']
 
+SCHEMA_TITLE_ID_MAP = {
+    'organicka-chemie': 24,
+    'fyzikalni-chemie': 20,
+    'obecna-chemie': 2
+}
+
+
 EMA_OPTIONAL_DATA = {
     # TODO: What about subtitles videos?
     'jazyk': '5-cs',
-    'autor': 'Khan Academy',
+    'autor': 'Khanova škola',
     'dostupnost': '7-ANO', # OER
     'typ': {
         'video': '8-VI',
@@ -40,27 +46,23 @@ EMA_OPTIONAL_DATA = {
     },
     # TODO: Update these for KS schemas
     'stupen_vzdelavani': {
-        'early-math': '2-Z',
-        'arithmetic': '2-Z',
-        'pre-algebra': '2-Z',
         'basic-geo': '2-Z',
         'algebra-basics': '2-Z',
-        'trigonometry': '2-G',
-        'music': '2-NU',
-        'cosmology-and-astronomy': '2-NU'
+        'organicka-chemie': '2-G',
+        'fyzikalni-chemie': '2-G'
     },
     'vzdelavaci_obor': {
         'math': '9-03',
-        'music': '9-11',
-        'astro': '9-09' # TODO: 9-10' # Not clear whether we can have multiple types
+        'chem': '9-08'
     },
     'rocnik': {
         'early-math': '3-Z13',
-        'trigonometry': '3-SS',
+        'organicka-chemie': '3-SS',
     },
     'gramotnost': {
         'math': '4-MA',
         'music': '4-NU',
+        'chem': '4-PR',
         'astro': '4-PR'
     }
 }
@@ -71,10 +73,10 @@ def ema_print_schema_content(schema, content):
     content_type = 'video'
 
     schema_subject_map = {
-        'organicka_chemie': 'chemie',
-        'obecna_chemie': 'chemie',
-        'fyzikalni_chemie': 'chemie',
-        'rychlokurz_chemie': 'chemie'
+        'organicka-chemie': 'chem',
+        'obecna_chemie': 'chem',
+        'fyzikalni_chemie': 'chem',
+        'rychlokurz_chemie': 'chem'
     }
 
     subject = schema_subject_map[schema]
@@ -102,9 +104,9 @@ def ema_print_schema_content(schema, content):
             # Optional fields
             'typ': EMA_OPTIONAL_DATA['typ'][content_type],
             # TODO: Uncomment this in final version
-            #'stupen_vzdelavani': EMA_OPTIONAL_DATA['stupen_vzdelavani'][schema],
-            #'vzdelavaci_obor': EMA_OPTIONAL_DATA['vzdelavaci_obor'][subject],
-            #'gramotnost': EMA_OPTIONAL_DATA['gramotnost'][subject],
+            'stupen_vzdelavani': EMA_OPTIONAL_DATA['stupen_vzdelavani'][schema],
+            'vzdelavaci_obor': EMA_OPTIONAL_DATA['vzdelavaci_obor'][subject],
+            'gramotnost': EMA_OPTIONAL_DATA['gramotnost'][subject],
           }
 
           ema_content.append(item)
@@ -152,11 +154,11 @@ def get_schema_content(connection, schema_id):
     cur = connection.cursor()
 
     # TODO: Check which JOINS to use to avoid duplicates
-    sql = """SELECT ct.id, ct.title, ct.description, ct.youtube_id
+    sql = """SELECT sch.id, bl.id, ct.id, ct.title, ct.description
             FROM "contents" AS ct 
             JOIN content_block_bridges AS cbb ON ct.id = cbb.content_id
-            JOIN blocks ON blocks.id = cbb.block_id
-            JOIN block_schema_bridges AS bsb ON bsb.block_id = blocks.id
+            JOIN blocks AS bl ON bl.id = cbb.block_id
+            JOIN block_schema_bridges AS bsb ON bsb.block_id = bl.id
             JOIN schemas AS sch ON sch.id = bsb.schema_id
             WHERE ct.type = 'video' AND ct.hidden = 'f' AND sch.id = %d
             ORDER BY ct.id""" % (schema_id)
@@ -177,30 +179,41 @@ if __name__ == '__main__':
     opts = read_cmd()
     psswd = opts.password
     schema_title = opts.schema
-    # TODO: Schema_title_id_map
-    schema_title_id_map = {
-            'organicka_chemie': 24
-            }
+
+    if opts.schema is None:
+        eprint("Please specify schema via -s cmd parameter")
+        exit(1)
+
+    if schema_title not in SCHEMA_TITLE_ID_MAP.keys():
+        eprint('Invalid schema %s' % schema_title)
+        exit(1)
+
+    schema_id = SCHEMA_TITLE_ID_MAP[schema_title]
+
+    chem_schemas = ['organicka-chemie', 'fyzikalni-chemie', 'obecna-chemie']
+    bio_schemas = []
+    fyz_schemas = []
+    all_schemas = chem_schemas + bio_schemas + fyz_schemas
+
     with open("psql", "r") as f:
         psswd = f.read()
         psswd = psswd[:-1]
 
     conn = connect_ks(psswd)
     #print_schemas(conn)
-    schema_id = schema_title_id_map[schema_title]
     rows = get_schema_content(conn, schema_id)
     videos = []
     for row in rows:
         # TODO: Make prettier URL, include full schema/block path
-        url = 'https://khanovaskola.cz/video/%s' % row[3]
+        url = 'https://khanovaskola.cz/video/%s/%s/%s' % (row[0], row[1], row[2])
         video = {
-            'id': row[0],
-            'title': row[1],
-            'description': row[2],
+            'id': row[2],
+            'title': row[3],
+            'description': row[4],
             'url': url
         }
         videos.append(video)
-        #print(row)
+        print(row)
 
     ema_print_schema_content(schema_title, videos)
 
