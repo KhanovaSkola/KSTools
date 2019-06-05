@@ -3,7 +3,7 @@
 import json, sys, os
 import requests 
 from pprint import pprint
-from utils import load_obj_bin, save_obj_bin
+from utils import load_obj_bin, save_obj_bin, eprint
 
 # And pass locale in constructor
 SERVER_URL = 'https://www.khanacademy.org'
@@ -19,7 +19,7 @@ kapi_headers = {
    'format': 'json'
 }
 
-_EXIT_ON_HTTP_ERROR = False
+_EXIT_ON_HTTP_ERROR = True
 
 
 class KhanAPI:
@@ -50,7 +50,7 @@ class KhanAPI:
             except:
                 # Catch exception when r.json is empty
                 pass
-            if _EXIT_ON_HTTPERROR:
+            if _EXIT_ON_HTTP_ERROR:
                 sys.exit(1)
             else:
                 return {}
@@ -69,7 +69,6 @@ class KhanAPI:
     # EDIT: It seems that the V2 approach will not work here...
     def download_topic_tree(self, content_type):
         """Content type can be 'video', 'exercise', 'article'"""
- 
         #url = self.server_url + API2 + 'topics/topictree'
         url = self.server_url + self.default_api_resource + 'topictree'
         body = {
