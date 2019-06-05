@@ -16,7 +16,7 @@ var DIVIDEND_DECIMAL = 0;
 // END OF USER INPUT
 /************************************************/
 
-Divider.translateHint = function(locale, string) {
+Divider.translateHint = function(locale, string, values = null) {
     
     var stringTranslations = {
         'with_remainder_of': {
@@ -90,15 +90,72 @@ Divider.translateHint = function(locale, string) {
             'fr': '',
         }
     };
-    
+
     if (!(string in stringTranslations)) {
         return "ERROR: missing translation!";
     } else if (!(locale in stringTranslations[string])) {
         return 'ERROR: missing translation for locale '+locale;
     }
+
+    translatedString = stringTranslations[string][locale];
+
+    if (locale === 'hu' && values) {
+      hungarianMultiplePlurals(string, translatedString, values);
+    }
+
+    if (values) {
+      replaceValuesInString(translatedString, values);
+    }
     
-    return stringTranslations[string][locale];
+    return translatedString;
 };
+
+var replaceValuesInStrings = function(string, values) {
+  for (key in values) {
+    value = values[key];
+    string = string.replace(`%(${key})s`, value);
+  }
+};
+
+var hungarianMultiplePlurals = function(key, string, values) {
+
+  if (key ===  'remainder_less_than_divisor') {
+    //'hu': '\\text{Mivel a } %(remainder)s \\text{ kisebb, mint a } %(divisor)s \\text{, ezért ez az osztás maradéka.}',
+    /*
+    if (value in XX) {
+      string.replace(' a ', ' az ');
+    }
+    */
+  } 
+  else if ( key === 'how_many_times_divisor_into_value') {
+    // 'hu': '\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}',
+    value = values['value'];
+    var lastDigit = value % 10;
+    var lastTwoDigits = value % 100;
+    var isRoundThousand = !(value % 1000);
+    var isRoundHundred= !(value % 100);
+    var benNumbers = [1, 2, 4, 5, 7, 9, 10, 40, 50, 70, 90];
+    if (isRoundThousand) {
+      string = string.replace('-ben', '-ban');
+    }
+    else if (isRoundHundred) {
+      return;
+    }
+    else if (lastDigit === 0 && benNumbers.indexOf(lastTwoDigits) !== -1) {
+      string = string.replace('-ben', '-ban');
+    }
+    else if (lastDigit.indexOf(lastDigit) !== -1) {
+      string = string.replace('-ben', '-ban');
+    }
+
+    // TODO: Add rule for az
+    /*
+    divisor = values['divisor'];
+    */
+  }
+
+};
+
 
 function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRemainder) {
     var graph = KhanUtil.currentGraph;
@@ -286,7 +343,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         temporaryLabel = graph.label([dx, 1],
             $.ngettext("\\text{" + Divider.translateHint(locale, "shift_decimal_1_right")+"}",
                        "\\text{" + Divider.translateHint(locale, "shift_decimal_num_right")+"}",
-                       deciDivisor),
+              deciDivisor),
             "right");
 
         if (locale === 'en') {
@@ -331,8 +388,8 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
 
     this.showDivisionStep = function(division) {
         // Write question
-        var question = $._(Divider.translateHint(locale, 'how_many_times_divisor_into_value'),
-                        {divisor: divisor, value: currentValue});
+        var question = Divider.translateHint(locale, 'how_many_times_divisor_into_value',
+            {divisor: divisor, value: currentValue});
 
         if (currentValue >= divisor) {
             graph.label([dx, dy], question, "right");
@@ -460,8 +517,7 @@ function Divider(locale, divisor, dividend, deciDivisor, deciDividend, decimalRe
         if (remainder === 0) {
             txt = "\\text{" + $._(Divider.translateHint(locale, 'remainder_is_0')) + "}";
         } else {
-            txt = $._(Divider.translateHint(locale, 'remainder_less_than_divisor'),
-                    { remainder: remainder, divisor: divisor });
+            txt = Divider.translateHint(locale, 'remainder_less_than_divisor', { remainder: remainder, divisor: divisor });
             var remainderShorthand = '\\text{' + Divider.translateHint(locale, 'remainder_shorthand');
             var dxRemainder = 0.0;
             if (locale === 'en') {
