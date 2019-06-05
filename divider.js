@@ -16,7 +16,7 @@ var DIVIDEND_DECIMAL = 0;
 // END OF USER INPUT
 /************************************************/
 
-Divider.translateHint = function(locale, string, values = null) {
+Divider.translateHint = function(locale, string, values) {
     
     var stringTranslations = {
         'with_remainder_of': {
@@ -100,58 +100,67 @@ Divider.translateHint = function(locale, string, values = null) {
     translatedString = stringTranslations[string][locale];
 
     if (locale === 'hu' && values) {
-      hungarianMultiplePlurals(string, translatedString, values);
+      translatedString = hungarianMultiplePlurals(string, translatedString, values);
     }
 
     if (values) {
-      replaceValuesInString(translatedString, values);
+      translatedString = replaceValuesInString(translatedString, values);
     }
     
     return translatedString;
 };
 
-var replaceValuesInStrings = function(string, values) {
+var replaceValuesInString = function(string, values) {
   for (key in values) {
     value = values[key];
-    string = string.replace(`%(${key})s`, value);
+    string = string.replace('%(' + key + ')s', value);
   }
+  return string;
 };
 
 var hungarianMultiplePlurals = function(key, string, values) {
 
   if (key ===  'remainder_less_than_divisor') {
     //'hu': '\\text{Mivel a } %(remainder)s \\text{ kisebb, mint a } %(divisor)s \\text{, ezért ez az osztás maradéka.}',
-    /*
-    if (value in XX) {
-      string.replace(' a ', ' az ');
-    }
+    /* TODO
+    // string = hungarianReplaceA(string, 'Mivel a', values.remainder);
+    // string = hungarianReplaceA(string, 'mint a', values.divisor);
     */
   } 
   else if ( key === 'how_many_times_divisor_into_value') {
     // 'hu': '\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}',
-    value = values['value'];
+    // TOOD: Make a separate function for this
+    value = values.value;
     var lastDigit = value % 10;
     var lastTwoDigits = value % 100;
     var isRoundThousand = !(value % 1000);
     var isRoundHundred= !(value % 100);
     var benNumbers = [1, 2, 4, 5, 7, 9, 10, 40, 50, 70, 90];
+    var replaceBan = false;
     if (isRoundThousand) {
-      string = string.replace('-ben', '-ban');
+      replaceBan = true;
     }
     else if (isRoundHundred) {
-      return;
+      replaceBan = false;
     }
     else if (lastDigit === 0 && benNumbers.indexOf(lastTwoDigits) !== -1) {
-      string = string.replace('-ben', '-ban');
+      replaceBan = true;
     }
-    else if (lastDigit.indexOf(lastDigit) !== -1) {
-      string = string.replace('-ben', '-ban');
+    else if (benNumbers.indexOf(lastDigit) !== -1) {
+      replaceBan = true;
+    }
+
+    if (replaceBan) {
+      string = string.replace('-ban', '-ben');
     }
 
     // TODO: Add rule for az
     /*
     divisor = values['divisor'];
+    // string = hungarianReplaceAz(string, values, 'value');
+    // string = hungarianReplaceAz(string, values, 'divisor');
     */
+    return string;
   }
 
 };
