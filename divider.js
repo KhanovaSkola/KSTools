@@ -16,7 +16,7 @@ var DIVIDEND_DECIMAL = 0;
 // END OF USER INPUT
 /************************************************/
 
-Divider.translateHint = function(locale, string, values) {
+Divider.translateHint = function(locale, stringKey, values) {
     
     var stringTranslations = {
         'with_remainder_of': {
@@ -67,7 +67,7 @@ Divider.translateHint = function(locale, string, values) {
             'hu': 'Helyezd a tizedesvesszőt egy helyiértékkel jobbra!',
             'fr': '',
         },
-        // We lack a proper multiple plural support, 
+        // We lack a proper multiple plural support for this string, 
         // but here the %(num)s should be mostly 2-4
         "shift_decimal_num_right": {
             'en': 'Shift the decimal %(num)s to the right',
@@ -91,20 +91,20 @@ Divider.translateHint = function(locale, string, values) {
         }
     };
 
-    if (!(string in stringTranslations)) {
+    if (!(stringKey in stringTranslations)) {
         return "ERROR: missing translation!";
-    } else if (!(locale in stringTranslations[string])) {
+    } else if (!(locale in stringTranslations[stringKey])) {
         return 'ERROR: missing translation for locale '+locale;
     }
 
-    translatedString = stringTranslations[string][locale];
+    translatedString = stringTranslations[stringKey][locale];
 
     if (locale === 'hu' && values) {
-      translatedString = hungarianMultiplePlurals(string, translatedString, values);
+        translatedString = hungarianMultiplePlurals(stringKey, translatedString, values);
     }
 
     if (values) {
-      translatedString = replaceValuesInString(translatedString, values);
+        translatedString = replaceValuesInString(translatedString, values);
     }
     
     return translatedString;
@@ -112,57 +112,81 @@ Divider.translateHint = function(locale, string, values) {
 
 var replaceValuesInString = function(string, values) {
   for (key in values) {
-    value = values[key];
-    string = string.replace('%(' + key + ')s', value);
+      value = values[key];
+      string = string.replace('%(' + key + ')s', value);
   }
   return string;
+};
+
+
+var hungarianReplaceA = function(string, substring, number) {
+    var replaceA = false;
+    // Generally, if a number start with these, use az
+    // exceptions: 10-19 and 100-199
+    var azNumbers = [1, 5];
+    var firstDigit = number.toString()[0];
+    firstDigit = parseInt(firstDigit, 10);
+
+    if (number >= 10 && number < 20) {
+        replaceA = false;
+    }
+    else if (number >= 100 && number < 200) {
+        replaceA = false;
+    }
+    else if (azNumbers.indexOf(firstDigit) !== -1) {
+        replaceA = true;
+    }
+
+    if (replaceA) {
+        string = string.replace(substring, substring + 'z');
+    }
+    return string;
+};
+
+var hungarianReplaceBan = function(string, number) {
+    var lastDigit = number % 10;
+    var lastTwoDigits = number % 100;
+    var isRoundThousand = !(number % 1000);
+    var isRoundHundred= !(number % 100);
+    // Generally, if a number ends with these, use ben
+    // with exceptions for round hundreds and thousands
+    var benNumbers = [1, 2, 4, 5, 7, 9, 10, 40, 50, 70, 90];
+    var replaceBan = false;
+
+    if (isRoundThousand) {
+        replaceBan = true;
+    }
+    else if (isRoundHundred) {
+        replaceBan = false;
+    }
+    else if (lastDigit === 0 && benNumbers.indexOf(lastTwoDigits) !== -1) {
+        replaceBan = true;
+    }
+    else if (benNumbers.indexOf(lastDigit) !== -1) {
+        replaceBan = true;
+    }
+
+    if (replaceBan) {
+        string = string.replace('-ban', '-ben');
+    }
+    return string;
 };
 
 var hungarianMultiplePlurals = function(key, string, values) {
 
   if (key ===  'remainder_less_than_divisor') {
-    //'hu': '\\text{Mivel a } %(remainder)s \\text{ kisebb, mint a } %(divisor)s \\text{, ezért ez az osztás maradéka.}',
-    /* TODO
-    // string = hungarianReplaceA(string, 'Mivel a', values.remainder);
-    // string = hungarianReplaceA(string, 'mint a', values.divisor);
-    */
-  } 
-  else if ( key === 'how_many_times_divisor_into_value') {
-    // 'hu': '\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}',
-    // TOOD: Make a separate function for this
-    value = values.value;
-    var lastDigit = value % 10;
-    var lastTwoDigits = value % 100;
-    var isRoundThousand = !(value % 1000);
-    var isRoundHundred= !(value % 100);
-    var benNumbers = [1, 2, 4, 5, 7, 9, 10, 40, 50, 70, 90];
-    var replaceBan = false;
-    if (isRoundThousand) {
-      replaceBan = true;
-    }
-    else if (isRoundHundred) {
-      replaceBan = false;
-    }
-    else if (lastDigit === 0 && benNumbers.indexOf(lastTwoDigits) !== -1) {
-      replaceBan = true;
-    }
-    else if (benNumbers.indexOf(lastDigit) !== -1) {
-      replaceBan = true;
-    }
-
-    if (replaceBan) {
-      string = string.replace('-ban', '-ben');
-    }
-
-    // TODO: Add rule for az
-    /*
-    divisor = values['divisor'];
-    // string = hungarianReplaceAz(string, values, 'value');
-    // string = hungarianReplaceAz(string, values, 'divisor');
-    */
-    return string;
+     //'hu': '\\text{Mivel a } %(remainder)s \\text{ kisebb, mint a } %(divisor)s \\text{, ezért ez az osztás maradéka.}'
+     string = hungarianReplaceA(string, 'Mivel a', values.remainder);
+     string = hungarianReplaceA(string, 'mint a', values.divisor);
   }
+  else if ( key === 'how_many_times_divisor_into_value') {
+    // 'hu': '\\text{Hányszor van meg a }%(divisor)s\\text{ a }\\color{#6495ED}{%(value)s}\\text{-ban}\\text{?}'
+    string = hungarianReplaceBan(string, values.value);
 
+    string = hungarianReplaceA(string, 'van meg a', values.divisor);
+    string = hungarianReplaceA(string, 'text{ a', values.value);
+  }
+  return string;
 };
 
 
