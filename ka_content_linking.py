@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from kapi import *
-from utils import *
+import utils
 import argparse, sys
 import time
 import json
@@ -10,14 +10,13 @@ def read_cmd():
    desc = "Program for linking CS-Khan content for EMA reputation system."
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('-s','--subject', dest='subject', default = 'root', help = 'Link given course.')
-   parser.add_argument('-c','--content', dest='content', help = 'Content kind: video|exercise')
+   parser.add_argument('-c','--content', dest='content', required = True, help = 'Content kind: video|exercise')
    parser.add_argument('-a','--all', dest = 'all', action = 'store_true', help = 'Print all available courses')
    # TODO: Add verbose parameter
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
 CONTENT_TYPES = ['video', 'exercise']
-LISTED_CONTENT_FILE = 'indexable_slugs.txt'
 #TODO
 SKIPPED_CONTENT_FILE = 'skipped_slugs.txt'
 
@@ -63,25 +62,12 @@ EMA_OPTIONAL_DATA = {
     }
 }
 
-# TODO: Rename this function, re-use for skipped content
-def read_listed_content_slugs(listed_content_file):
-    listed_content = set()
-    with open(listed_content_file, 'r') as f:
-        for line in f:
-            l = line.split()
-            if len(l) != 1:
-                print("ERROR during reading file " + listed_content_file)
-                print("line: " + line)
-            listed_content.add(l[0])
-
-    return listed_content
-
 def ema_print_course_content(course, content, content_type):
     ema_content = []
     unique_content_ids = set()
 
     # KA API returns unlisted content as well, need to deal with that externally
-    listed_content = read_listed_content_slugs(LISTED_CONTENT_FILE)
+    listed_content = utils.read_listed_content_slugs()
 
     course_subject_map = {
         'music': 'music',

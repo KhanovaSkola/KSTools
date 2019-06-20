@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Only for debuggind
+# Only for debugging, does not really work cause
+# the content ordering in json files seems to be random
 function compare_reference {
   course=$1
   ct_type=$2

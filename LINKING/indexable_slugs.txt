@@ -1,1 +1,1 @@
-indexable_slugs_20181126.txt
+indexable_slugs_ids_2019-06-17.txt
