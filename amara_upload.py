@@ -235,7 +235,7 @@ for i in range(len(ytids)):
                 sys.exit(1)
 
     r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers, s=ses)
-    if r['version_no'] == int(sub_version)+1:
+    if r['version_number'] == int(sub_version)+1:
         print('Succesfully uploaded subtitles to: '+r['site_uri'])
     else:
         print("This is weird. Something probably went wrong during upload.")

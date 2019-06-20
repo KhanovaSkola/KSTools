@@ -129,7 +129,7 @@ def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers,s=N
         'subtitles': subs,
         'sub_format': sub_format,
         'language_code': lang,
-        'is_complete': is_complete,   # Warning, this is deprecated
+        'subtitles_complete': is_complete,
         #'action': "Publish"
         }
 

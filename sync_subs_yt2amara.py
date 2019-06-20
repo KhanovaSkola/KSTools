@@ -207,20 +207,17 @@ for i in range(len(ytids)):
 
 #   PART 4: UPLOADING THE SUBTITLES 
     r = upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers, s=am_ses)
-    if not 'version_no' in r:
-        print('ERROR: when uploading subs to Amara:',ytid_from)
-        epprint(ytid_from)
+    if not 'version_number' in r:
+        print('ERROR: when uploading subs to Amara. YTID = ', ytid_from)
         epprint(r)
         continue
-    # this is not possible here, we dont have sub_version
-#    if r['version_no'] == sub_version+1:
     else:
-        print('Succesfully uploaded subtitles for YTID=',ytid_from," AmaraID=",amara_id)
+        print('Succesfully uploaded subtitles for YTID = ' , ytid_from, " AmaraID = ", amara_id)
         uploaded += 1
         f_vids.write(ytid_from+'\n')
 
 
-print("(:And we are finished!:)")
+print("(: And we are finished! :)")
 print(USERNAME+" have succesfuly uploaded ",uploaded, " videos.")
 print(missing," videos on YT are missing subtitles")
 

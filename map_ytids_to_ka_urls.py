@@ -14,15 +14,6 @@ def read_cmd():
    parser.add_argument('-l','--lang', dest='lang', default='en', help='Language of LTT.')
    return parser.parse_args()
 
-def print_children_titles(content_tree):
-    for child in content_tree["children"]:
-       pprint(child['title'])
-
-def print_dict_without_children(dictionary):
-    for k in dictionary.keys():
-        if k != 'children':
-            print(k, dictionary[k])
-
 if __name__ == "__main__":
 
     opts = read_cmd()
