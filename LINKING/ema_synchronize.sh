@@ -17,12 +17,12 @@ SYNC=false
 DOWNLOAD=false
 
 if [[ $DOWNLOAD = 'true' ]];then
-  ../download_KAtree.py -l cs -c video
+  ../download_khan_tree.py -l cs -c video
   if [[ $? -ne 0 ]];then
     echo "ERROR: Could not get exercises for course $course"
     exit 1
   fi
-  ../download_KAtree.py -l cs -c exercise
+  ../download_khan_tree.py -l cs -c exercise
   if [[ $? -ne 0 ]];then
     echo "ERROR: Could not get exercises for course $course"
     exit 1
@@ -48,11 +48,10 @@ fi
 # Copy all json files to the server
 SRV="/srv/khanovaskola.cz/production/www/ppuc/"
 
-# Temporary hack, we should rename these in RVP admin
-mv ka_basic_geo_exercise.json ka_basic_geometry_exercise.json
-mv ka_basic_geo_video.json ka_basic_geometry_video.json
-mv ka_pre_algebra_exercise.json ka_pre-algebra_exercise.json
-mv ka_pre_algebra_video.json ka_pre-algebra_video.json
-
 ls *json
 mv *json $SRV
+if [[ $? -eq 0 ]];then
+  echo "SUCCESFUL SYNC OF EMA JSON FILES!"
+else
+  echo "mv command failed with error code $?"
+fi
