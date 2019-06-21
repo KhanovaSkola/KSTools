@@ -12,7 +12,7 @@ def read_cmd():
    parser.add_argument('-s','--subject', dest='subject', default = 'root', help = 'Link given course.')
    parser.add_argument('-c','--content', dest='content', required = True, help = 'Content kind: video|exercise')
    parser.add_argument('-a','--all', dest = 'all', action = 'store_true', help = 'Print all available courses')
-   # TODO: Add verbose parameter
+   parser.add_argument('-d','--debug', dest = 'debug', action = 'store_true', help = 'Print all available courses')
    return parser.parse_args()
 
 # Currently, article type does not seem to work.
@@ -99,14 +99,26 @@ def ema_print_course_content(course, content, content_type):
     for v in content:
 
         if v['id'] not in listed_content and v['slug'] not in listed_content:
-            eprint('Not listed: ' + v['slug'])
+            if opts.debug:
+                eprint('Not listed: ' + v['slug'])
             continue
 
         if v['id'] in unique_content_ids:
-            eprint("Found in previous math course, skipping: ", v['slug'])
+            if opts.debug:
+                eprint("Found in previous math course, skipping: ", v['slug'])
             continue
         else:
             unique_content_ids.add(v['id'])
+
+        # If a description does not exist, let's use Title as an ugly hack
+        if v['translated_description'] is None:
+            if opts.debug:
+                print(v['node_slug'], 'WARNING: Empty description, returning None')
+            v['translated_description'] = v['title']
+        elif not v['translated_description']:
+            if opts.debug:
+                print(v['node_slug'], 'WARNING: Empty description!')
+            v['translated_description'] = v['title']
 
         try:
           item = {
@@ -146,14 +158,15 @@ def ema_print_course_content(course, content, content_type):
               if v['ka_user_licence'] == 'yt-standard':
                 item['licence_url'] = 'https://www.youtube.com/static?template=terms&gl=CZ'
               else:
-                eprint("WARNING: Missing license URL!")
+                if opts.debug:
+                    eprint("WARNING: Missing license URL!")
                 del item['licence']
 
           ema_content.append(item)
 
         except:
-            eprint('Key error!')
-            eprint(v)
+            print('Key error!')
+            pprint(v)
             raise
  
     with open('ka_%s_%s.json' % (course.replace('-', '_').lower(), content_type), 'w', encoding = 'utf-8') as out:
@@ -185,8 +198,8 @@ if __name__ == '__main__':
     else:
         courses = [course]
         if course not in available_courses:
-            eprint('ERROR: Invalid course! Valid course are:')
-            eprint(courses)
+            print('ERROR: Invalid course! Valid course are:')
+            print(courses)
             sys.exit(1)
 
     khan_tree = KhanContentTree('cs', content_type)

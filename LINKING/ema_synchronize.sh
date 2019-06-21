@@ -13,8 +13,11 @@ function compare_reference {
   fi
 }
 
+# TODO: Add these as a cmdline parameters
 SYNC=false
 DOWNLOAD=false
+#DEBUG="--debug"
+DEBUG=""
 
 if [[ $DOWNLOAD = 'true' ]];then
   ../download_khan_tree.py -l cs -c video
@@ -29,13 +32,13 @@ if [[ $DOWNLOAD = 'true' ]];then
   fi
 fi
 
-../ka_content_linking.py -a -c video 2>error.log
+../ka_content_linking.py -a -c video $DEBUG
 if [[ $? -ne 0 ]];then
   echo "ERROR: Could not print videos"
   exit 1
 fi
 
-../ka_content_linking.py -a -c exercise 2>>error.log
+../ka_content_linking.py -a -c exercise $DEBUG
 if [[ $? -ne 0 ]];then
   echo "ERROR: Could not print exercises"
   exit 1
