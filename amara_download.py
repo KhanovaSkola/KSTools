@@ -2,7 +2,8 @@
 from subprocess import Popen, PIPE, call, check_call
 import argparse, sys
 from pprint import pprint
-from amara_api import *
+import api.amara_api as amara_api
+import requests
 from utils import answer_me
 
 
@@ -21,7 +22,7 @@ def read_cmd():
    parser.add_argument('-y',dest='yt', action="store_true", help='Download subtitles from YouTube.')
    parser.add_argument('-a',dest='amara', action="store_true", help='Download subtitles from Amara.')
    parser.add_argument('-v','--video', dest='video', action="store_true", default=False, help='Download video from YouTube in addition to subtitles.')
-   parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
+   parser.add_argument('-c','--credentials', dest='apifile', help='Text file containing your Amara API key and username on the first line.')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -51,10 +52,14 @@ with open(infile, "r") as f:
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
-file = open(apifile, "r")
-API_KEY, USERNAME = file.read().split()[0:]
-print('Using Amara username: '+USERNAME)
-print('Using Amara API key: '+API_KEY)
+if not opts.yt:
+    if not apifile:
+        print("ERROR: You did not provide file with Amara API credentials!")
+        sys.exit(1)
+    file = open(apifile, "r")
+    API_KEY, USERNAME = file.read().split()[0:]
+    print('Using Amara username: '+USERNAME)
+    print('Using Amara API key: '+API_KEY)
 
 call("rm -f youtubedl.out", shell=True)
 
@@ -65,6 +70,8 @@ amara_headers = {
    'format': 'json'
 }
 # Create persistent HTTP session
+# TODO: We should encapsulate Amara API in a class 
+# and handle this internally!
 ses = requests.Session()
 
 # Main loop
@@ -74,7 +81,7 @@ for i in range(len(ytids)):
     video_url_from = 'https://www.youtube.com/watch?v='+ytid_from
 
 #   GETTING THE SUBTITLES 
-    if opts.yt == True:
+    if opts.yt:
         ytdownload = 'youtube-dl  --youtube-skip-dash-manifest  --sub-lang '+lang+ \
         ' --sub-format '+sub_format+' --write-sub '+ video_url_from
         if not opts.video:
@@ -109,7 +116,7 @@ for i in range(len(ytids)):
                 print("Successfully downloaded the video.")
 
         # First, get first Amara ID
-        amara_response = check_video( video_url_from, amara_headers, s = ses)
+        amara_response = amara_api.check_video( video_url_from, amara_headers, s = ses)
         if amara_response['meta']['total_count'] == 0:
             print("ERROR: Source video is not on Amara! YT id"+ytid_from)
             sys.exit(1)
@@ -118,10 +125,10 @@ for i in range(len(ytids)):
             amara_title =  amara_response['objects'][0]['title']
             print("Downloading "+lang+" subtitles from:")
             print("Title: "+amara_title)
-            print(AMARA_BASE_URL+'cs/videos/'+amara_id_from)
+            print(amara_api.AMARA_BASE_URL+'cs/videos/'+amara_id_from)
 
         # Check whether subtitles for a given language are present,
-        is_present, sub_version = check_language(amara_id_from, lang, amara_headers, s = ses)
+        is_present, sub_version = amara_api.check_language(amara_id_from, lang, amara_headers, s = ses)
         if is_present:
             print("Subtitle revision number: "+str(sub_version))
         else:
@@ -129,7 +136,7 @@ for i in range(len(ytids)):
             sys.exit(1)
  
         # Download and write subtitles from Amara for a given language
-        subs = download_subs(amara_id_from, lang, sub_format, amara_headers, s = ses)
+        subs = amara_api.download_subs(amara_id_from, lang, sub_format, amara_headers, s = ses)
         f = open(ytid_from +'.'+lang+'.srt', "w")
         f.write(subs)
         f.close()

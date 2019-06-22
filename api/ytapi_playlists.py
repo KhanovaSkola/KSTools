@@ -5,6 +5,11 @@ from pprint import pprint
 import youtubedl_common
 from xml.etree import ElementTree
 
+# our own very rudimentary YT API functions
+# In most scipts we use ytapi_captions_oauth.py,
+# based on the code from official API docs
+
+# This file was mostly used to get info from YT playlists
 
 YTAPI_VERSION = 'v3/'
 YTAPI_BASE_URL = 'https://www.googleapis.com/youtube/'+YTAPI_VERSION
@@ -56,8 +61,8 @@ def get_playlist_items(pl_id):
         r.raise_for_status()
         json_response = r.json()
     except requests.HTTPError as e:
-        eprint('Error for video',video_url)
-        eprint(e,"in amara_api::check_video")
+        eprint('Error for video', video_url)
+        eprint(e)
         try:
             eprint(r.json())
         except:

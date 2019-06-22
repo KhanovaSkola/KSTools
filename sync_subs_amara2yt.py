@@ -3,7 +3,7 @@ from __future__ import print_function
 from subprocess import Popen, PIPE, call, check_call
 import sys
 from pprint import pprint
-from amara_api import *
+from api.amara_api import *
 from utils import eprint, epprint
 import os
 

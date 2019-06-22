@@ -3,7 +3,7 @@ from subprocess import Popen, PIPE, call, check_call
 import argparse, sys
 import requests
 from pprint import pprint
-from amara_api import *
+from api.amara_api import *
 from utils import answer_me
 
 

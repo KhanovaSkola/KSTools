@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse, sys
 from pprint import pprint
-from amara_api import *
+from api.amara_api import *
 from utils import answer_me
 
 def read_cmd():
