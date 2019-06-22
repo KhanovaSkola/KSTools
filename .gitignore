@@ -1,13 +1,9 @@
-myapi*
-youtubedl.out
+*dat
+*txt
+*json*
+youtubedl*
 topictree*
 KAtree*
-all*dat
-all*txt
-video*txt
-exercise*txt
-article*txt
-dhbot_*
 SYNC/*
 DATA/*
 subs/*

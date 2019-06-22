@@ -92,6 +92,9 @@ if __name__ == "__main__":
 
     # TODO: Add info about whether video is dubbed or not,
     # Need a separate call to kapi.download_video
+    
+    # NEED to filter out subtitled videos that should be dubbed probably check manually in relevant subject
+    # Maybe we should also add filtering here based on what is INDEXABLE
 
     filename = opts.content_type + "_" + format_filename(subject_title) + "_" + date + ".csv"
     with open(filename, "w", encoding = 'utf-8') as f:
