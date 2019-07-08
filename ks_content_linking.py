@@ -195,7 +195,7 @@ if __name__ == '__main__':
     fyz_schemas = []
     all_schemas = chem_schemas + bio_schemas + fyz_schemas
 
-    with open("psql", "r") as f:
+    with open("psql.psswd", "r") as f:
         psswd = f.read()
         psswd = psswd[:-1]
 

@@ -11,6 +11,7 @@ SECRETS/*
 LINKING/*csv
 LINKING/*json
 LINKING/*pkl
+*psswd
 
 
 # Byte-compiled / optimized / DLL files
