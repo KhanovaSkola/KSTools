@@ -131,30 +131,33 @@ class KhanContentTree():
             for t in tree["children"]:
                 self.get_unique_content_data(ids, out, keys, t)
 
-    def get_units(self, units, tree = None):
-        if tree is None:
-            tree = self.content_tree
 
+    def get_topics(self, topics, tree = None, render_type = 'all'):
+        if tree is None:
+            if self.content_tree is None:
+                self.load()
+            tree = self.content_tree
         if tree["kind"] == "Topic":
             if len(tree["children"]) == 0:
                 return
-            if tree['render_type'] == 'Topic':
-                units.append(tree)
-                return
+            if render_type == 'all' or tree['render_type'] == render_type:
+                topics.append(tree)
             for child in tree["children"]:
-                self.get_units(units, child)
+                self.get_topics(topics, child, render_type)
 
     def get_lessons(self, lessons, tree = None):
-        if tree is None:
-            tree = self.content_tree
-        if tree["kind"] == "Topic":
-            if len(tree["children"]) == 0:
-                return
-            if tree['render_type'] == 'Tutorial':
-                lessons.append(tree)
-                return
-            for child in tree["children"]:
-                self.get_lessons(lessons, child)
+        return self.get_topics(lessons, tree, 'Tutorial')
+
+    def get_units(self, units, tree = None):
+        return self.get_topics(units, tree, 'Topic')
+
+    def get_domains(self, domains, tree = None):
+        return self.get_topics(domains, tree, 'Domain')
+
+    def get_courses(self, courses, tree = None):
+        return self.get_topics(courses, tree, 'Subject')
+
+
  
 
 def kapi_download_topic(topic, kind):
