@@ -130,6 +130,31 @@ class KhanContentTree():
                 return
             for t in tree["children"]:
                 self.get_unique_content_data(ids, out, keys, t)
+
+    def get_units(self, units, tree = None):
+        if tree is None:
+            tree = self.content_tree
+
+        if tree["kind"] == "Topic":
+            if len(tree["children"]) == 0:
+                return
+            if tree['render_type'] == 'Topic':
+                units.append(tree)
+                return
+            for child in tree["children"]:
+                self.get_units(units, child)
+
+    def get_lessons(self, lessons, tree = None):
+        if tree is None:
+            tree = self.content_tree
+        if tree["kind"] == "Topic":
+            if len(tree["children"]) == 0:
+                return
+            if tree['render_type'] == 'Tutorial':
+                lessons.append(tree)
+                return
+            for child in tree["children"]:
+                self.get_lessons(lessons, child)
  
 
 def kapi_download_topic(topic, kind):

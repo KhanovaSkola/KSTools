@@ -1,5 +1,5 @@
 #/usr/bin/env python3
-import sys
+import sys, os
 import pickle
 from pprint import pprint
 import string
@@ -68,19 +68,32 @@ def print_dict_without_children(dictionary):
         if k != 'children':
             print(k, dictionary[k])
 
-# We reuse this for EMA and Bakalari linking
-# KA API returns also unlisted content, so we need to filter it out "manually"
-def read_listed_content_slugs():
-    # This is not ideal, this file is actually in LINKING folder
-    LISTED_CONTENT_FILE = 'indexable_slugs.txt'
-    listed_content = set()
-    with open(LISTED_CONTENT_FILE, 'r') as f:
+
+def read_unique_data_from_one_column(fname):
+    out = set()
+    with open(fname, 'r') as f:
         for line in f:
             l = line.split()
             if len(l) != 1:
-                print("ERROR during reading file " + listed_content_file)
-                print("line: " + line)
+                print("ERROR during reading file ", listed_content_file)
+                print("line: ", line)
                 sys.exit(1)
-            listed_content.add(l[0])
+            if len(l[0].strip()) == 0:
+                print("ERROR: Empty line in file ", listed_content_file)
+                sys.exit(1)
+            out.add(l[0])
+    return out
 
+# We reuse this for EMA and Bakalari linking
+# KA API returns also unlisted content, so we need to filter it out "manually"
+def read_listed_content_slugs():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    LISTED_CONTENT_FILE = dir_path + '/indexable_slugs.txt'
+    listed_content = read_unique_data_from_one_column(LISTED_CONTENT_FILE)
     return listed_content
+
+def read_listed_topic_slugs():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    LISTED_TOPIC_FILE = dir_path + '/indexable_topic_slugs.txt'
+    listed_topic_slugs = read_unique_data_from_one_column(LISTED_TOPIC_FILE)
+    return listed_topic_slugs
