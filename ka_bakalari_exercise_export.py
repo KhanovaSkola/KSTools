@@ -9,29 +9,55 @@ def read_cmd():
    """Reading command line options."""
    desc = "Program for relinking Khan Content Bakalari NEXT e-learning module."
    parser = argparse.ArgumentParser(description=desc)
+   parser.add_argument('-d','--debug', dest='debug', default = False, action = 'store_true', help='Print debug info.')
 #   parser.add_argument('-s','--subject', dest='subject', default='root', help='Relink content for a given domain/subject.')
 #   parser.add_argument('-c','--content', dest='content', default='video', help='Which kind of content should we relink? Options: video')
    return parser.parse_args()
 
-# TODO: All this should probably be moved into the bakalari_data dict
-UNIT_TEST_TYPE = "web prezentace"
-EXERCISE_TYPE = "web prezentace"
-LESSON_TYPE = "web rozcestník"
+DEBUG = False
 
+"""Bakalari fields constants"""
+BAKALARI_DATA = {
+    'DODAVATEL': 'Khan Academy',
+    'CULTURE': '--',
+    'lang_audio': '--',
+    'lang_subs': '--',
+    'lang_text': 'CZ',
+    'TYPE': {
+        'unit_test': "web prezentace",
+        'exercise': "web prezentace",
+        'lesson': "web rozcestník"
+        },
+    'USAGE': {
+        'unit_test': 'online test',
+        'exercise': 'cvičení (příklad)',
+        'lesson': 'výklad látky, test online, cvičení (příklad)'
+        },
+    'SUBJECT': 'M',
+    'AUTHOR': 'DH',
+    'ACCESS': 'Zdarma'
+}
 
 # TODO: use ka_url or slugs instead of ids, which are unreliable
 def read_linked_data():
-    fname = 'khan_videos_linked_data.csv'
-    delimiter = ';'
+    """
+    Read related data from linked videos
+    | studyYear | Relevance | Level | Klíč. slova
+    """
+    fname = 'khan_videos_linked_data.tsv'
+    delimiter = '\t'
     linked_data = {}
     with open(fname, 'r') as f:
         for line in f:
-            data = line.split(';')
+            data = line.split(delimiter)
             content_id = data[0]
+            url = data[5]
             linked_data[content_id] = {
-                    'grade': data[1],
-                    'keywords': data[2]
-                    }
+                'grade': data[1],
+                'relevance': data[2],
+                'difficulty': data[3],
+                'keywords': data[4]
+            }
     return linked_data
 
 
@@ -59,20 +85,54 @@ def get_content_type(content):
         u.print_dict_without_children(content)
         sys.exit(1)
 
-# TODO: Put related data to a separate structure from bakalari data
-# and rename bakalari_data to BAKALARI_DATA
-def print_bakalari_link(khan_data, bakalari_data, output_file):
-    # TODO: Use this to automatically determine bakalari_data type and usage
+
+def print_header(output_file):
+    output_file.write("originalId;title;description;link;")
+    output_file.write("Keywords;studyYear;Relevance;Level;")
+    output_file.write("Předmět;Jazyk-mluvené slovo;Jazyk-titulky;Jazyk - texty;")
+    output_file.write("Kulturně závislý obsah;Typ materiálu;Způsob využití;")
+    output_file.write("Dodavatel;Přístup;Autor\n")
+
+def print_bakalari_link(khan_data, related_data, bakalari_data, output_file):
     ct_type = get_content_type(khan_data)
-    title = khan_data['translated_title'].strip().replace(';',',')
-    desc = khan_data['translated_description'].strip().replace(';',',')
-    # Write data from Khan API
+    print_khan_data(khan_data, output_file)
+    print_related_data(related_data, output_file)
+    print_bakalari_data(bakalari_data, ct_type, output_file)
+    output_file.write('\n')
+
+def print_related_data(related_data, output_file):
+    """
+    Write related data from linked videos
+    | Klíč. slova | studyYear| Relevance | Level |
+    """
+    keywords = stringify_keywords(related_data['keywords'])
+    grade = stringify_number(related_data['grade'])
+    relevance = stringify_number(related_data['relevance'])
+    difficulty = stringify_number(related_data['difficulty'])
+    output_file.write('%s;%s;%s;%s;' % (
+             keywords, grade, relevance, difficulty))
+
+def print_khan_data(khan_data, output_file):
+    """
+    Write data from Khan API for one content item to a file
+    | id | title | description | URL |
+    """
+    title = khan_data['translated_title'].strip().replace(';',',').replace('\n', ' ')
+    desc = khan_data['translated_description'].strip().replace(';',',').replace('\n', ' ')
     output_file.write('%s;%s;%s;%s;' % (
              khan_data['id'], title, desc, khan_data['ka_url']))
-    # Bakalari fields
-    output_file.write('%s;%s;%s;%s;%s;%s;%s;%s\n' % (
-             bakalari_data['DODAVATEL'], bakalari_data['lang_audio'], bakalari_data['lang_subs'], bakalari_data['lang_text'],
-             bakalari_data['CULTURE'], bakalari_data['keywords'], bakalari_data['grade'], bakalari_data['TYPE']))
+
+def print_bakalari_data(bakalari_data, content_type, output_file):
+    """
+    Write fixed Bakalari fields for one content item to a file
+    | Předmět | Jazyk - mluvené slovo | Jazyk - titulky | Jazyk - texty |
+    | Kulturně závislý obsah | Typ materiálu | Způsob využití |
+    | Dodavatel | Přístup | Autor |
+    """
+    output_file.write('%s;%s;%s;%s;%s;%s;%s;%s;%s;%s' % (
+             bakalari_data['SUBJECT'], bakalari_data['lang_audio'], bakalari_data['lang_subs'], bakalari_data['lang_text'],
+             bakalari_data['CULTURE'], bakalari_data['TYPE'][content_type], bakalari_data['USAGE'][content_type],
+             bakalari_data['DODAVATEL'], bakalari_data['ACCESS'], bakalari_data['AUTHOR']))
 
 
 def get_related_video_ids(ct_item):
@@ -91,14 +151,18 @@ def get_related_video_ids(ct_item):
     return related_video_ids
 
 def get_related_data(ct_item, linked_data):
-    related_video_ids = get_related_video_ids(ct_item)
     # TODO: we might need to switch to slugs instead of video_ids
+    related_video_ids = get_related_video_ids(ct_item)
     related_unique_keywords = set()
     related_grades = []
+    related_relevances = []
+    related_difficulties = []
     for i in related_video_ids:
         if i in linked_data.keys():
             d = linked_data[i]
             related_grades.append(int(d['grade']))
+            related_relevances.append(int(d['relevance']))
+            related_difficulties.append(int(d['difficulty']))
             keywords = d['keywords'].split(',')
             for keyword in keywords:
                 keyword = keyword.strip()
@@ -106,18 +170,33 @@ def get_related_data(ct_item, linked_data):
                 related_unique_keywords.add(keyword)
 
     related_grade = 0
-    # Pick the highest related grade
+    # Pick the highest related data
     if len(related_grades) != 0:
         related_grades.sort(reverse=True)
-        #related_grade = str(related_grades[0])
         related_grade = related_grades[0]
-        if related_grades[0] != related_grades[-1]:
+        if related_grades[0] != related_grades[-1] and DEBUG:
             eprint('WARNING: Incompatible related grades for exercise ', c['slug'])
             eprint('Video IDS:', related_video_ids)
             eprint('Lowest and highest grade:', related_grades[-1], related_grades[0])
             eprint('Grade difference:', related_grades[0] - related_grades[-1])
 
-    return related_unique_keywords, related_grade
+    related_relevance = 0
+    if len(related_relevances) != 0:
+        related_relevances.sort(reverse=True)
+        related_relevance = related_relevances[0]
+
+    related_difficulty = 0
+    if len(related_difficulties) != 0:
+        related_difficulties.sort(reverse=True)
+        related_difficulty = related_difficulties[0]
+
+    related_data = {
+        'keywords': related_unique_keywords,
+        'grade': related_grade,
+        'relevance': related_relevance,
+        'difficulty': related_difficulty
+    }
+    return related_data
 
 
 def stringify_keywords(keyword_set):
@@ -127,18 +206,23 @@ def stringify_keywords(keyword_set):
     keywords = keywords.rstrip(',')
     return keywords
 
-def stringify_grade(grade):
-    if grade < 0:
-        print("ERROR: Grade cannot be < 0")
-    elif grade == 0:
+def stringify_number(number):
+    if number < 0:
+        print("ERROR: Invalid filed number %i" % number)
+        sys.exit(1)
+    elif number == 0:
         return ''
     else:
-        return str(grade)
+        return str(number)
 
-def update_bakalari_data(bak_data, ct_type, keywords, grade):
-    bak_data['TYPE'] = ct_type
-    bak_data['keywords'] = keywords
-    bak_data['grade'] = grade
+def update_related_data(rel_data, new_data):
+    for key in rel_data.keys():
+        if key == 'keywords':
+            # Union of sets
+            rel_data[key].update(new_data[key])
+        else:
+            if new_data[key] > rel_data[key]:
+                rel_data[key] = new_data[key]
 
 def get_unit_test_link(unit):
     unit_url = unit['ka_url']
@@ -147,7 +231,7 @@ def get_unit_test_link(unit):
     return unit_test_url
 
 def get_unit_test_title(unit):
-    return "Souhrný test ke kapitole: " + unit['translated_title']
+    return "Souhrnný test ke kapitole: " + unit['translated_title']
 
 def get_unit_test_description(unit):
     # TODO: What should the description be?
@@ -157,7 +241,7 @@ def get_unit_test_description(unit):
 # Filter out unlisted content
 def get_listed_content(content, listed_content_slugs):
     listed_content = []
-    # This is weird, cause our listed_content_file contains either slug or id
+    # This looks weird cause our listed_content_file contains either slug or id
     # for historical reasons (this is what we got from a custom export by KAHQ)
     for c in content:
         if c['id'] in listed_content_slugs or c['slug'] in listed_content_slugs:
@@ -178,8 +262,9 @@ CONTENT_TYPES = ['exercise']
 if __name__ == '__main__':
 
     opts = read_cmd()
-#    topic_title  = opts.subject
-#    content_type = opts.content.lower()
+    DEBUG = opts.debug
+#   topic_title  = opts.subject
+#   content_type = opts.content.lower()
     # Let's just do Math for now
     topic_title = 'math'
     content_type = 'exercise'
@@ -208,36 +293,19 @@ if __name__ == '__main__':
     # External data from Bakalari linkers
     khan_video_linked_data = read_linked_data()
 
-    # Bakalari fields
-    bakalari_data = {
-        'DODAVATEL': 'Khan Academy',
-        'CULTURE': '--',
-        'lang_audio': '--',
-        'lang_subs': '--',
-        'lang_text': 'CZ',
-        'TYPE': '',
-        'USAGE': {
-            'unit_test': 'online test',
-            'exercise': 'cvičení (příklad)',
-            'lesson': 'výklad látky, test online, cvičení (příklad)'
-            },
-        # The following are variables
-        'keywords': '',
-        'grade': ''
+    related_data_prototype = {
+        'keywords': set(),
+        'grade': 0,
+        'relevance': 0,
+        'difficulty': 0
     }
-
-    linked_data = {
-        'keywords': '',
-        'grade': ''
-            }
 
     OUTPUT_FNAME = 'bakalari_khan_export_%s_%s.csv' % (topic_title.replace(' ', '_').lower(), content_type)
     f = open(OUTPUT_FNAME, 'w')
+    print_header(f)
 
     unique_content_ids = set()
     units = []
-    lesson_keywords = set()
-    unit_keywords = set()
 
     khan_tree.get_units(units, subtree)
 
@@ -245,31 +313,23 @@ if __name__ == '__main__':
         if unit['slug'] not in listed_topic_slugs:
             continue
         lessons = []
-        unit_keywords.clear()
-        unit_grade = 0
-
+        unit_data = related_data_prototype
         khan_tree.get_lessons(lessons, unit)
 
         # TODO: Skip unlisted lessons, but hopefully not necessary
         for lesson in lessons:
             content = []
-            lesson_keywords.clear()
-            lesson_grade = 0
-
+            lesson_data = related_data_prototype
             kapi_tree_get_content_items(lesson, content, content_type)
 
             # Filter out unlisted content first
             listed_content = get_listed_content(content, listed_content_slugs)
 
-            # Maybe turn this for loop into get_lesson_linked_data
             # Listed content can contain duplicities from previous lessons,
             # but that is okay because we want the linked data from them!
             for c in listed_content:
-                keywords, grade = get_related_data(c, khan_video_linked_data)
-                # Union of sets
-                lesson_keywords.update(keywords)
-                if grade > lesson_grade:
-                    lesson_grade = grade
+                exercise_data = get_related_data(c, khan_video_linked_data)
+                update_related_data(lesson_data, exercise_data)
 
             # Filter out duplicities now!
             unique_content = get_unique_content(listed_content, unique_content_ids)
@@ -277,32 +337,21 @@ if __name__ == '__main__':
             # Print lesson link if the lesson is not empty
             # If lessons contains only duplicates, we do not print it
             if len(unique_content) > 0:
-                keyword_string = stringify_keywords(lesson_keywords)
-                grade_string = stringify_grade(lesson_grade)
-                update_bakalari_data(bakalari_data, LESSON_TYPE, keyword_string, grade_string)
-                print_bakalari_link(lesson, bakalari_data, f)
+                print_bakalari_link(lesson, lesson_data, BAKALARI_DATA, f)
 
             # Print links for individual content items
             for c in unique_content:
-                keywords, grade = get_related_data(c, khan_video_linked_data)
-                keyword_string = stringify_keywords(keywords)
-                grade_string = stringify_grade(grade)
-                update_bakalari_data(bakalari_data, EXERCISE_TYPE, keyword_string, grade_string)
-                print_bakalari_link(c, bakalari_data, f)
+                exercise_data = get_related_data(c, khan_video_linked_data)
+                print_bakalari_link(c, exercise_data, BAKALARI_DATA, f)
 
-            unit_keywords.update(lesson_keywords)
-            if lesson_grade > unit_grade:
-                unit_grade = lesson_grade
+            update_related_data(unit_data, lesson_data)
 
         # Print UNIT TEST
-        keyword_string = stringify_keywords(unit_keywords)
-        grade_string = stringify_grade(unit_grade)
-        update_bakalari_data(bakalari_data, UNIT_TEST_TYPE, keyword_string, grade_string)
         # A dirty hack, we want to link to a Unit TEST, not the Unit itself
         unit['ka_url'] = get_unit_test_link(unit)
         unit['translated_title'] = get_unit_test_title(unit)
         unit['translated_description'] = get_unit_test_description(unit)
-        print_bakalari_link(unit, bakalari_data, f)
+        print_bakalari_link(unit, unit_data, BAKALARI_DATA, f)
 
     f.close()
     print("Number of retrieved content items = ", len(unique_content_ids))
