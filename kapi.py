@@ -63,6 +63,14 @@ class KhanAPI:
         json_response = self._get_url(url)
         return json_response
 
+    # This is not tested
+    def download_topic(topic_title, kind):
+        url = self.server_url + self.default_api_resource + 'topic/'  + topic_title
+        if kind == 'video' or kind == 'exercise':
+            url += '/' + kind + 's'
+        json_response = self._get_url(url)
+        return json_response
+
 
     # TODO: Convert to V2 API
     # It seems that the kind argument does not work?
@@ -158,51 +166,7 @@ class KhanContentTree():
         return self.get_topics(courses, tree, 'Subject')
 
 
- 
-
-def kapi_download_topic(topic, kind):
-    url = SERVER_URL + DEFAULT_API_RESOURCE + 'topic/'  + topic
-    if kind == 'video' or kind == 'exercise':
-        url += '/' + kind + 's'
-    print(url)
-    try:
-        r = requests.get(url, headers=kapi_headers )
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        print(e)
-        sys.exit(1)
-    return json_response
-
-def kapi_download_videos_from_topic(topic):
-    url = SERVER_URL + DEFAULT_API_RESOURCE + 'topic/'  + topic + ''
-    try:
-        r = requests.get(url, headers=kapi_headers )
-        r.raise_for_status()
-        json_response = r.json()
-    except requests.HTTPError as e:
-        print(e)
-        sys.exit(1)
-
-    return json_response
-
-
-def kapi_tree_print_tutorials(tree, out_list):
-    delim = ';'
-    if tree["kind"] == "Topic":
-        if len(tree["children"]) == 0:
-            # This can happen if Topic includes only Exercises or Articles
-            # Articles seems to be topics as well
-           return
-        for c in tree["children"]:
-            title = c['title']
-            url = 'https://cs.khanacademy.org/translations/edit/cs/'
-            url = url + c['slug'] + '/tree/upstream'
-            out_list.append(title + delim + url + '\n')
-            if c['render_type'] != "Tutorial":
-                kapi_tree_print_tutorials(c, out_list)
-    return
-
+# TODO: Move functions below into classes above
 def kapi_tree_print_full(tree, out_list):
     delim = ';'
     if len(out_list) == 0:
@@ -250,7 +214,7 @@ def kapi_tree_print_full(tree, out_list):
             ytid = tree["youtube_id"]
             # yt_url is not present in all videos, we will make our own
             #yt_url = tree['url']
-            yt_url = 'https://www.youtube.com/timedtext_video?v='+ytid
+            yt_url = 'https://www.youtube.com/timedtext_video?v=' + ytid
             if 'mp4' in tree['download_urls']:
                 download_urls = tree['download_urls']['mp4']
             else:

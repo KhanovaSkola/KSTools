@@ -85,10 +85,7 @@ if __name__ == "__main__":
     content = []
     date = time.strftime("%d%m%Y")
     
-    if opts.content_type == 'tutorial':
-        kapi_tree_print_tutorials(subtree, content)
-    else:
-        kapi_tree_print_full(subtree, content)
+    kapi_tree_print_full(subtree, content)
 
     # TODO: Add info about whether video is dubbed or not,
     # Need a separate call to kapi.download_video

@@ -4,6 +4,11 @@ from utils import *
 import argparse, sys
 import time
 
+# This is basically a specialized faster version of map_ytid_to_khandata.py
+# We take the data from previously downloaded full topic tree
+# This is faster then going video-by-video, depending on how many videos you have
+# Unfortunately, due to a bug in KA API, this does not work for certain attributes like
+# translated_title
 
 def read_cmd():
    """Function for reading command line options."""
@@ -44,7 +49,7 @@ if __name__ == "__main__":
         if ytid is not None:
             v = find_video_by_youtube_id(subtree, ytid)
         if v:
-            videos.append(find_video_by_youtube_id(subtree, ytid) )
+            videos.append(v)
         else:
             videos.append(ytid)
 
