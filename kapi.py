@@ -7,7 +7,6 @@ from utils import load_obj_bin, save_obj_bin, eprint
 
 # And pass locale in constructor
 SERVER_URL = 'https://www.khanacademy.org'
-TP_URL = 'https://www.khanacademy.org/translations/edit/cs/'
 DEFAULT_API_RESOURCE = '/api/v1/'
 # Version 2 is not documented, here used only for topic tree
 # But apparently does not even fetch the whole tree, so new code will be needed
@@ -63,6 +62,11 @@ class KhanAPI:
         json_response = self._get_url(url)
         return json_response
 
+    def download_article(self, article_id):
+        url = self.server_url + self.default_api_resource + 'articles/'  + article_id
+        json_response = self._get_url(url)
+        return json_response
+
     # This is not tested
     def download_topic(topic_title, kind):
         url = self.server_url + self.default_api_resource + 'topic/'  + topic_title
@@ -76,7 +80,7 @@ class KhanAPI:
     # It seems that the kind argument does not work?
     # EDIT: It seems that the V2 approach will not work here...
     def download_topic_tree(self, content_type):
-        """Content type can be 'video', 'exercise', 'article'"""
+        """Content type can be 'video', 'exercise', 'topic'"""
         #url = self.server_url + API2 + 'topics/topictree'
         url = self.server_url + self.default_api_resource + 'topictree'
         body = {
@@ -146,8 +150,6 @@ class KhanContentTree():
                 self.load()
             tree = self.content_tree
         if tree["kind"] == "Topic":
-            if len(tree["children"]) == 0:
-                return
             if render_type == 'all' or tree['render_type'] == render_type:
                 topics.append(tree)
             for child in tree["children"]:
@@ -204,33 +206,14 @@ def kapi_tree_print_full(tree, out_list):
             desc = desc.expandtabs(0).replace('\n',' ')
         ka_url = tree['ka_url']
 
-        # These are useless
-        if "keywords" in tree:
-            keywords = tree['keywords']
-        else:
-            keywords = " "
-
         if tree["kind"] == "Video":
             ytid = tree["youtube_id"]
-            # yt_url is not present in all videos, we will make our own
-            #yt_url = tree['url']
             yt_url = 'https://www.youtube.com/timedtext_video?v=' + ytid
-            if 'mp4' in tree['download_urls']:
-                download_urls = tree['download_urls']['mp4']
-            else:
-                download_urls = " "
             dur = str(tree['duration'])
         else:
             ytid = " "
             yt_url = " "
-            download_urls = " "
             dur = " "
- 
-        # This does not work, google sheets interprets this as a text
-        #link_ka = 'HYPERLINK("'+ka_url+'","link")'
-        #link_yt = 'HYPERLINK("'+yt_url+'","link")'
-
-        # TODO add Amara link - maybe we don't need auth for that
 
         # Dirty hack to make columns aligned
         if out_list[-1][-1] == '\n':
@@ -245,14 +228,18 @@ def kapi_tree_print_full(tree, out_list):
             table_row = table_row + delim + ytid + delim + yt_url + delim + dur
 
         # For exercises, add link to Translation Portal
-        # Currently hard-coded for MATH, don't know how to generalize it :(
         if tree["content_kind"] == "Exercise":
-            tp_link = delim+TP_URL+'/math/'+tree['node_slug']
-            table_row = table_row + tp_link
+
+            table_row = table_row + delim + create_tp_link(tree['node_slug'])
 
         table_row = table_row + '\n'
 
         out_list.append(table_row)
+
+def create_tp_link(node_slug):
+    # WARNING: hardcoded cs locale
+    TP_URL = 'https://www.khanacademy.org/translations/edit/cs/'
+    return TP_URL + node_slug + '/tree/upstream'
 
 
 def find_ka_topic(tree, title):

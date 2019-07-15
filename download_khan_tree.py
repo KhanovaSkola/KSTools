@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-from kapi import *
-from utils import *
+import kapi
 import argparse, sys
-import time
-
 
 def read_cmd():
    """Function for reading command line options."""
@@ -13,8 +10,9 @@ def read_cmd():
    parser.add_argument('-l', '--lang', dest='lang', default = 'en', help='Language of the topic tree. (US by default)')
    return parser.parse_args()
 
-# Currently, article type does not seem to work, not sure about topic and tutorial
-AVAILABLE_CONTENT_TYPES = ['video', 'article', 'exercise', 'topic', 'tutorial']
+# Currently, article type does not work
+# Each article need to be downloaded separately via kapi.download_article(article_id)
+AVAILABLE_CONTENT_TYPES = ['video', 'exercise', 'topic']
 
 if __name__ == "__main__":
 
@@ -25,14 +23,9 @@ if __name__ == "__main__":
         print("Available:", AVAILABLE_CONTENT_TYPES)
         exit(1)
 
-    if opts.content_type == "tutorial" or opts.content_type == "topic":
-        download_type = 'video'
-    else:
-        download_type = opts.content_type
-
-    khan_tree = KhanContentTree(opts.lang, download_type)
-    kapi = KhanAPI(opts.lang)
-    tree = kapi.download_topic_tree(download_type)
+    khan_tree = kapi.KhanContentTree(opts.lang, opts.content_type)
+    khan_api = kapi.KhanAPI(opts.lang)
+    tree = khan_api.download_topic_tree(opts.content_type)
     if tree is not None:
         khan_tree.save(tree)
         print("Successfully downloaded Khan %s topic tree for locale %s" % (opts.content_type, opts.lang))
