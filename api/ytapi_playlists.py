@@ -13,13 +13,14 @@ from xml.etree import ElementTree
 
 YTAPI_VERSION = 'v3/'
 YTAPI_BASE_URL = 'https://www.googleapis.com/youtube/'+YTAPI_VERSION
-API_KEY = 'AIzaSyBtZJiEfa42lvDHePwJ8Fvkhr-VwgJQOj0'
+
+# TODO: Pass API key as a parameter of a file
+#API_KEY = 'XX'
 
 #https://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video
 
 yt_headers = {
    'Content-Type': 'application/json',
-#   'X-api-key': API_KEY,
    'format': 'json'
 }
 
