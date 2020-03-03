@@ -14,7 +14,6 @@ def read_cmd():
 #   parser.add_argument('-c','--content', dest='content', default='video', help='Which kind of content should we relink? Options: video')
    return parser.parse_args()
 
-DEBUG = False
 
 """Bakalari fields constants"""
 BAKALARI_DATA = {
@@ -29,20 +28,19 @@ BAKALARI_DATA = {
         'lesson': "web rozcestník"
         },
     'USAGE': {
-        'unit_test': 'online test',
+        'unit_test': 'test online',
         'exercise': 'cvičení (příklad)',
-        'lesson': 'výklad látky, test online, cvičení (příklad)'
+        'lesson': 'výklad látky, cvičení (příklad)'
         },
     'SUBJECT': 'M',
     'AUTHOR': 'DH',
     'ACCESS': 'Zdarma'
 }
 
-# TODO: use ka_url or slugs instead of ids, which are unreliable
 def read_linked_data():
     """
     Read related data from linked videos
-    | studyYear | Relevance | Level | Klíč. slova
+    | ID | studyYear | Relevance | Level | Klíč. slova
     """
     fname = 'khan_videos_linked_data.tsv'
     delimiter = '\t'
@@ -51,7 +49,6 @@ def read_linked_data():
         for line in f:
             data = line.split(delimiter)
             content_id = data[0]
-            url = data[5]
             linked_data[content_id] = {
                 'grade': data[1],
                 'relevance': data[2],
@@ -82,7 +79,7 @@ def get_content_type(content):
         return 'lesson'
     else:
         print('ERROR: Unknown content type in')
-        u.print_dict_without_children(content)
+        utils.print_dict_without_children(content)
         sys.exit(1)
 
 
@@ -107,6 +104,10 @@ def print_related_data(related_data, output_file):
     """
     keywords = stringify_keywords(related_data['keywords'])
     grade = stringify_number(related_data['grade'])
+
+    # Sometimes relevance contains bad data, not sure how it got there:
+    if related_data['relevance'] == -1:
+        related_data['relevance'] = 3
     relevance = stringify_number(related_data['relevance'])
     difficulty = stringify_number(related_data['difficulty'])
     output_file.write('%s;%s;%s;%s;' % (
@@ -151,7 +152,6 @@ def get_related_video_ids(ct_item):
     return related_video_ids
 
 def get_related_data(ct_item, linked_data):
-    # TODO: we might need to switch to slugs instead of video_ids
     related_video_ids = get_related_video_ids(ct_item)
     related_unique_keywords = set()
     related_grades = []
@@ -174,7 +174,7 @@ def get_related_data(ct_item, linked_data):
     if len(related_grades) != 0:
         related_grades.sort(reverse=True)
         related_grade = related_grades[0]
-        if related_grades[0] != related_grades[-1] and DEBUG:
+        if related_grades[0] != related_grades[-1] and opts.debug:
             eprint('WARNING: Incompatible related grades for exercise ', c['slug'])
             eprint('Video IDS:', related_video_ids)
             eprint('Lowest and highest grade:', related_grades[-1], related_grades[0])
@@ -208,7 +208,7 @@ def stringify_keywords(keyword_set):
 
 def stringify_number(number):
     if number < 0:
-        print("ERROR: Invalid filed number %i" % number)
+        print("ERROR: Invalid number %i" % number)
         sys.exit(1)
     elif number == 0:
         return ''
@@ -262,7 +262,6 @@ CONTENT_TYPES = ['exercise']
 if __name__ == '__main__':
 
     opts = read_cmd()
-    DEBUG = opts.debug
 #   topic_title  = opts.subject
 #   content_type = opts.content.lower()
     # Let's just do Math for now
@@ -288,8 +287,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # KA API returns unlisted content as well, need to deal with that externally
-    listed_content_slugs = u.read_listed_content_slugs()
-    listed_topic_slugs = u.read_listed_topic_slugs()
+    listed_content_slugs = utils.read_listed_content_slugs()
+    listed_topic_slugs = utils.read_listed_topic_slugs()
     # External data from Bakalari linkers
     khan_video_linked_data = read_linked_data()
 
