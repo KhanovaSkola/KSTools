@@ -7,7 +7,6 @@ KAtree*
 SYNC/*
 DATA/*
 subs/*
-SECRETS/*
 LINKING/*csv
 LINKING/*json
 LINKING/*pkl
