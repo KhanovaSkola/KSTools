@@ -3,10 +3,7 @@
 # Usage example:
 # python captions.py --videoid='<video_id>' --name='<name>' --file='<file>' --language='<language>' --action='action'
 
-import httplib2
-import os
-import sys
-
+import httplib2, os, sys
 
 from apiclient.discovery import build_from_document
 from apiclient.errors import HttpError
@@ -17,27 +14,21 @@ from oauth2client.tools import argparser, run_flow
 import logging
 logging.basicConfig()
 
-# Safety guard to prevent messing with other languages at KA
-#SAFE_MODE = True
-SAFE_MODE = False
-
-FORBIDDEN_FILE = "yt_upload_forbidden."
-
-SECRETS_DIR = "SECRETS/"
-
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
-
 # the OAuth 2.0 information for this application, including its client_id and
 # client_secret. You can acquire an OAuth 2.0 client ID and client secret from
-# the {{ Google Cloud Console }} at
-# {{ https://cloud.google.com/console }}.
+# the {{ Google Dev Console }} at
+# {{ https://console.developers.google.com/ }}.
 # Please ensure that you have enabled the YouTube Data API for your project.
 # For more information about using OAuth2 to access the YouTube Data API, see:
 #   https://developers.google.com/youtube/v3/guides/authentication
 # For more information about the client_secrets.json file format, see:
 #   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-CLIENT_SECRETS_FILE = SECRETS_DIR+"client_secrets.json"
-#CLIENT_SECRETS_FILE = "client_secrets.json"
+SECRETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../SECRETS"))
+
+# The API client currently registered for private account danekhollas@gmail.com
+CLIENT_ID = "536936581201"
+CLIENT_SECRETS_FILE = "%s/client_secrets_%s.json" % (SECRETS_DIR, CLIENT_ID)
 
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
@@ -64,15 +55,16 @@ def get_authenticated_service(args):
   flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE, scope=YOUTUBE_READ_WRITE_SSL_SCOPE,
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
-  storage = Storage(SECRETS_DIR+"%s-oauth2.json" % sys.argv[0])
+  # The credentials will be saved to this file,
+  # so we need to sign in only once
+  storage = Storage("%s/%s-oauth2.json" % (SECRETS_DIR, os.path.basename(sys.argv[0])))
   credentials = storage.get()
 
   if credentials is None or credentials.invalid:
     credentials = run_flow(flow, storage, args)
 
-  # Trusted testers can download this discovery document from the developers page
-  # and it should be in the same directory with the code.
-  with open(SECRETS_DIR+"youtube-v3-api-captions.json", "r") as f:
+  # https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
+  with open("api/youtube-v3-api-captions.json", "r") as f:
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
@@ -96,10 +88,6 @@ def list_captions(youtube, video_id, verbose=True):
 
 # Call the API's captions.insert method to upload a caption track in draft status.
 def upload_caption(youtube, video_id, language, name, is_draft, file):
-  if language != 'cs' and SAFE_MODE:
-      print("We do not support upload to other languages besides Czech!")
-      sys.exit(1)
-
   try:
     insert_result = youtube.captions().insert(
     part="snippet",
@@ -114,14 +102,9 @@ def upload_caption(youtube, video_id, language, name, is_draft, file):
     media_body=file
     ).execute()
   except HttpError as e:
-      ##TODO: Check that we actually got 403
-      print("Got the following error during sub upload, YTID=", video_id)
+      print("Got the following error during sub upload, YTID = ", video_id)
       print(e)
-      fname = FORBIDDEN_FILE + language + ".dat"
-      with open(fname, "a") as f:
-          f.write(video_id+"\n")
-
-      return False
+      raise
 
   id = insert_result["id"]
   name = insert_result["snippet"]["name"]
@@ -134,12 +117,7 @@ def upload_caption(youtube, video_id, language, name, is_draft, file):
 
 # Call the API's captions.update method to update an existing caption track's draft status
 # and publish it. If a new binary file is present, update the track with the file as well.
-def update_caption(youtube,video_id, language, caption_id, is_draft, file):
-  if language != 'cs' and SAFE_MODE:
-      print("We do not support upload to other languages besides Czech!")
-      sys.exit(1)
-
-   # TODO: make this into try-except block and run check for 403
+def update_caption(youtube, video_id, language, caption_id, is_draft, file):
   try:
     update_result = youtube.captions().update(
     part="snippet",
@@ -153,14 +131,9 @@ def update_caption(youtube,video_id, language, caption_id, is_draft, file):
     ).execute()
 
   except HttpError as e:
-      ##TODO: Check that we actually got 403
-      print("Got the following error during sub update")
+      print("Got the following error during subtitle update")
       print(e)
-      fname = FORBIDDEN_FILE + language + ".dat"
-      with open(fname, "a") as f:
-          # I really need to pass YTID here as well
-          f.write(video_id+"\n")
-      return False
+      raise
 
   name = update_result["snippet"]["name"]
   isDraft = update_result["snippet"]["isDraft"]
@@ -182,17 +155,17 @@ def download_caption(youtube, caption_id, tfmt):
   with open(caption_id, "wb") as f:
       f.write(subtitle)
 
-
-# Call the API's captions.delete method to delete an existing caption track.
-def delete_caption(youtube, caption_id):
-  if SAFE_MODE:
-      print("We do not support subtitle deletion in the SAFE_MODE!")
-      sys.exit(1)
-  youtube.captions().delete(
-    id=caption_id
-  ).execute()
-
-  print("caption track '%s' deleted succesfully" % (caption_id))
+# Get API information about a YT video
+def list_video(youtube, ytid):
+    """https://developers.google.com/youtube/v3/docs/videos/list"""
+    response = youtube.videos().list(
+	part='snippet',
+	id=ytid).execute()
+    snippet = response['items'][0]['snippet']
+    for key in snippet.keys():
+        print(key)
+        print(snippet[key])
+    return snippet
 
 
 if __name__ == "__main__":
@@ -209,14 +182,14 @@ if __name__ == "__main__":
   # The "captionid" option specifies the ID of the caption track to be processed.
   argparser.add_argument("--captionid", help="Required; ID of the caption track to be processed")
   # The "action" option specifies the action to be processed.
-  argparser.add_argument("--action", help="Action", default="all")
+  argparser.add_argument("--action", help="Action: list|list_video|upload|update|download")
   # The "action" option specifies the action to be processed.
   argparser.add_argument("--draft", help="Publish subtitles?", default=False, action='store_true')
 
 
   args = argparser.parse_args()
 
-  if (args.action in ('upload', 'list', 'all')):
+  if (args.action in ('upload', 'list', 'list_video')):
     if not args.videoid:
           exit("Please specify videoid using the --videoid= parameter.")
 
@@ -224,39 +197,36 @@ if __name__ == "__main__":
     if not args.captionid:
           exit("Please specify captionid using the --captionid= parameter.")
 
-  if (args.action in ('upload', 'all')):
+  if args.action == 'upload':
     if not args.file:
       exit("Please specify a caption track file using the --file= parameter.")
     if not os.path.exists(args.file):
       exit("Please specify a valid file using the --file= parameter.")
 
+  if args.action in ('upload', 'update'):
+      # NOTE(danielhollas): this is just a precautionary measure
+      # this script should not be run directly anyway except for testing purposes
+      if args.language != 'cs':
+          print("We do not support upload to other languages besides Czech!")
+          sys.exit(1)
+
   youtube = get_authenticated_service(args)
+
   try:
     if args.action == 'upload':
       upload_caption(youtube, args.videoid, args.language, args.name, args.draft, args.file)
     elif args.action == 'list':
       list_captions(youtube, args.videoid)
+    elif args.action == 'list_video':
+      list_video(youtube, args.videoid)
     elif args.action == 'update':
-    # DH precautionary measure for now
-      if args.language != 'cs':
-          print("We do not support upload to other languages besides Czech!")
-          sys.exit(1)
       update_caption(youtube, args.videoid, args.language, args.captionid, args.draft, args.file);
     elif args.action == 'download':
       download_caption(youtube, args.captionid, 'srt')
-    elif args.action == 'delete':
-      delete_caption(youtube, args.captionid);
     else:
-      # All the available methods are used in sequence just for the sake of an example.
-      upload_caption(youtube, args.videoid, args.language, args.name, args.file)
-      captions = list_captions(youtube, args.videoid)
+      print("Nothing to do")
 
-      if captions:
-        first_caption_id = captions[0]['id'];
-        update_caption(youtube, args.videoid,  args.language, first_caption_id, None);
-        download_caption(youtube, first_caption_id, 'srt')
-        delete_caption(youtube, first_caption_id);
   except HttpError as e:
     print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
   else:
-    print("Created and managed caption tracks.")
+    print("Request succesfull!")

@@ -2,10 +2,9 @@
 import json, sys
 import requests 
 from pprint import pprint
-import youtubedl_common
 from xml.etree import ElementTree
 
-# our own very rudimentary YT API functions
+# Our own very rudimentary YT API functions
 # In most scipts we use ytapi_captions_oauth.py,
 # based on the code from official API docs
 
@@ -14,15 +13,27 @@ from xml.etree import ElementTree
 YTAPI_VERSION = 'v3/'
 YTAPI_BASE_URL = 'https://www.googleapis.com/youtube/'+YTAPI_VERSION
 
-# TODO: Pass API key as a parameter of a file
-#API_KEY = 'XX'
-
-#https://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video
+# https://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video
 
 yt_headers = {
    'Content-Type': 'application/json',
    'format': 'json'
 }
+
+# TODO: Need to ocarefully test this!
+# Can be used e.g. for modifying video description
+def update_video(youtube, ytid, snippet):
+    """https://developers.google.com/youtube/v3/docs/videos/update"""
+    request = youtube.videos().update(
+        part="snippet",
+        body={
+          "id": "ytid",
+          "snippet": snippet
+        }
+    )
+    response = request.execute()
+    print(response)
+    return response
 
 def yt_list_langs(ytid):
     response = requests.get('https://video.google.com/timedtext?hl=en&type=list&v=%s' % ytid)
@@ -36,21 +47,9 @@ def yt_list_langs(ytid):
    #     return []
 
     pprint(root)
-    sys.exit(1)
-
-    sub_lang_list = []
-    for track in subs_doc.findall('track'):
-        lang = track.attrib['lang_code']
-        sub_lang_list.append(lang)
-
-def yt_sub_upload(ytid, lang, subs, publish):
-    pass
-
-def yt_sub_download(ytid, lang, subs, caption_id):
-    pass
 
 def get_playlist_items(pl_id):
-    url = YTAPI_BASE_URL+'playlistItems'
+    url = YTAPI_BASE_URL + 'playlistItems'
     body = { 
         'part': "snippet",
         'playlistId': pl_id,
