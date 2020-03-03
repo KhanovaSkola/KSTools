@@ -167,6 +167,23 @@ class KhanContentTree():
     def get_courses(self, courses, tree = None):
         return self.get_topics(courses, tree, 'Subject')
 
+    def find_video(self, attr, attr_name, tree = None):
+        if tree is None:
+            if self.content_tree is None:
+                self.load()
+            tree = self.content_tree
+
+        if "children" not in tree.keys() or len(tree['children']) == 0:
+            return None
+        # Breadth first search
+        for c in tree['children']:
+            if c['kind'] == 'Video' and c[attr_name] == attr:
+                return c
+            result = self.find_video(attr, attr_name, c)
+            if result is not None:
+                return result
+        return None
+
 
 # TODO: Move functions below into classes above
 def kapi_tree_print_full(tree, out_list):

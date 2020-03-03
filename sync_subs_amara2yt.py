@@ -10,11 +10,6 @@ import os
 import ytapi_captions_oauth as ytapi
 from oauth2client.tools import argparser, run_flow
 
-
-# We suppose that the uploaded subtitles are complete (non-critical)
-is_complete = True # do we upload complete subtitles?
-
-SAFE_MODE = True
 #SUPPORTED_LANGUAGES = ['cs','bg','ko','pl']
 SUPPORTED_LANGUAGES = ['cs']
 
@@ -28,19 +23,16 @@ def read_cmd():
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs in the first column.')
    parser.add_argument('-d','--delimiter',dest='delim',default = None, help='Delimiter in text file')
    parser.add_argument('-l','--lang',dest='lang',default = "en", help='Which language do we copy?')
-   parser.add_argument('-c',dest='amara_api_file', help='Text file containing your API key and username on the first line.')
-#   parser.add_argument('-g',dest='google_api_file', help='Text file containing your Google credentials.')
-   parser.add_argument('-u','--update',dest='update',default=False,action="store_true", help='Update captions even if present on YT.')
+   parser.add_argument('-c',dest='amara_api_file', help='Text file containing your Amara API key and username on the first line.')
+   parser.add_argument('-u','--update',dest='update',default=False,action="store_true", help='Update subtitles even if present on YT.')
    parser.add_argument('-p','--publish', dest='publish', default=True, action="store_true", help='Publish subtitles.')
-   parser.add_argument('-v','--verbose', dest='verbose', default=False, action="store_true", help='More verbose output.')
+   parser.add_argument('-v','--verbose', dest='verbose', default=False, action="store_true", help='Verbose output.')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
 amara_apifile = opts.amara_api_file
 
-# TODO: use this somehow
-#google_apifile = opts.google_api_file
 lang = opts.lang
 verbose = opts.verbose
 
@@ -57,14 +49,11 @@ else:
     is_original = False
 
 
-if lang not in SUPPORTED_LANGUAGES and SAFE_MODE:
+if lang not in SUPPORTED_LANGUAGES:
     print("ERROR: We do not support upload for language "+lang)
     sys.exit(1)
 
 print("# Syncing subtitles for language:", lang)
-#answer = answer_me("# Is that okay?")
-#if not answer:
-#   sys.exit(1)
 
 ytids = []
 # Reading file with YT id's
@@ -84,8 +73,7 @@ if len(ytids) < 20:
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
 file = open(amara_apifile, "r")
 API_KEY, USERNAME = file.read().split()[0:]
-print('# Using Amara username: '+USERNAME)
-#print('Using Amara API key: '+API_KEY)
+print('# Using Amara username: ' + USERNAME)
 
 amara_headers = {
    'Content-Type': 'application/json',
@@ -102,7 +90,6 @@ except:
 
 f_capts_yt = open("captions_on_yt."+lang+".dat", "a+")
 f_capts_yt.seek(0)
-# Using set instead of list for faster search
 ytid_exist = set()
 for l in f_capts_yt:
     ytid_exist.add(l.split()[0])
@@ -157,17 +144,13 @@ for i in range(len(ytids)):
     if (ytid_from in ytid_exist and not opts.update) or ytid_from in ytid_skip:
         continue
 
-#    if verbose:
-    print("Syncing YTID="+ytid_from)
+    print("Syncing YTID=" + ytid_from)
 
     sys.stdout.flush()
     sys.stderr.flush()
     f_capts_yt.flush()
     f_capts_missing.flush()
 
-
-    # For now, let's just crash if video is not on YT anymore
-    # Helps to clean up the KS website
     try:
         captions = ytapi.list_captions(youtube, ytid_from, verbose=False)
     except:
@@ -215,15 +198,13 @@ for i in range(len(ytids)):
             print("Subtitles not found on Amara for YTID=", ytid_from)
             continue
 
-#   PART 2: GETTING THE SUBTITLES 
+#   PART 2: GETTING SUBTITLES FROM AMARA
     subs = download_subs(amara_id, lang, sub_format, amara_headers, s=am_ses )
     subs_fname = temp_folder+'/'+ytid_from +'.'+lang+'.srt'
     with open(subs_fname, "w") as f:
         f.write(subs)
 
-
-#   PART 3: UPLOADING THE SUBTITLES 
-
+#   PART 3: UPLOADING SUBTITLES TO YOUTUBE
     if captions_present:
         if verbose:
             print("Subtitles already present for YTID=", ytid_from)
@@ -242,7 +223,7 @@ for i in range(len(ytids)):
 
 
 print("\n(:And we are finished!:)")
-print(USERNAME+" have succesfuly uploaded ", uploaded, " videos.")
+print(USERNAME, " have succesfuly uploaded ", uploaded, " videos.")
 
 f_capts_yt.close()
 f_capts_missing.close()
@@ -250,5 +231,5 @@ f_ytvid_missing.close()
 
 if len(missing) != 0:
     print(len(missing)," videos are missing subtitles on Amara!")
-    print("Those YTIDs are listed in file ", fname_missing)
+    print("Those YTIDs are printed into file ", fname_missing)
 

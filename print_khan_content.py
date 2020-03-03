@@ -76,8 +76,8 @@ if __name__ == "__main__":
     # The following is helpful to determine where things are
     if lst:
         if subtree is not None:
-            #print("Printing dictionary for topic ", subject_title)
-            #print_dict_without_children(subtree)
+            print("Printing dictionary for topic ", subject_title)
+            u.print_dict_without_children(subtree)
             #print("=============================")
             print("Listing topic children for %s" % (subject_title))
             u.print_children_titles(subtree)
@@ -95,11 +95,11 @@ if __name__ == "__main__":
         if opts.content_type == 'video':
             keys = ('youtube_id', 'readable_id', 'duration')
         else:
-            keys = ('node_slug')
+            keys = ('node_slug', 'title')
 
         khan_tree.get_unique_content_data(ids, data, keys, subtree)
  
-        with open("unique_content.dat", "w") as f:
+        with open("unique_content.tsv", "w") as f:
             for v in data:
                 line = ''
                 for k in keys:

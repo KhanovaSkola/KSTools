@@ -112,6 +112,9 @@ for i in range(len(ytids)):
     video_present = False
     lang_present  = False
     lang_visible  = False
+    if len(ytids[i]) == 0 or ytids[i][0][0] == "#":
+        print("")
+        continue
     ytid_from = ytids[i][0]
 
     video_url_from = 'https://www.youtube.com/watch?v='+ytid_from
