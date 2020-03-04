@@ -18,11 +18,11 @@ SUB_FORMAT = 'vtt'
 def read_cmd():
    """Read command line options."""
    parser = argparser
-   parser.add_argument('input_file', metavar='INPUT_FILE', help='Text file containing YouTube IDs in the first column.')
-   parser.add_argument('-l','--lang', dest='lang', default = "en", help='Subtitle language?')
-   parser.add_argument('-u','--update', dest='update', default=False, action="store_true", help='Update subtitles even if present on YT.')
-   parser.add_argument('-p','--publish', dest='publish', default=True, action="store_true", help='Publish subtitles.')
-   parser.add_argument('-v','--verbose', dest='verbose', default=False, action="store_true", help='Verbose output.')
+   parser.add_argument('input_file', metavar='INPUT_FILE', help='Text file containing YouTube IDs in the first column')
+   parser.add_argument('-l','--lang', dest='lang', required = True, help='Subtitle language')
+   parser.add_argument('-u','--update', dest='update', default=False, action="store_true", help='Update subtitles even if present on YT')
+   parser.add_argument('-p','--publish', dest='publish', default=True, action="store_true", help='Publish subtitles')
+   parser.add_argument('-v','--verbose', dest='verbose', default=False, action="store_true", help='Verbose output')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -56,10 +56,17 @@ AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "SECRET
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
 with open(AMARA_API_FILE, "r") as f:
-    amara_api_key, amara_username = f.read().split()[0:]
-    print('Using Amara username: ' + amara_username)
+    cols = f.read().split()
+    if len(cols) > 2:
+        print("ERROR: Invalid input in file %s" % AMARA_API_FILE)
+        sys.exit(1)
+    elif len(cols) == 2:
+        # NOTE(danielhollas): amara_username is optional
+        # It is no longer required in amara_headers
+        amara_username = cols[1]
+        print('Using Amara username: ' + amara_username)
+    amara_api_key = cols[0]
 
-# NOTE(danielhollas): amara_username is no longer required in amara_headers
 amara_headers = {
    'Content-Type': 'application/json',
    'X-api-key': amara_api_key,
