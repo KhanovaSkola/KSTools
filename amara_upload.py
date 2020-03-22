@@ -23,7 +23,6 @@ def read_cmd():
    parser.add_argument('-f',dest='files', action="store_true",  help='Upload subtitles from files to Amara.')
    parser.add_argument('-y',dest='yt', action="store_true", help='Download subtitles from YouTube and upload them to Amara.')
    parser.add_argument('-a',dest='amara', action="store_true", help='Copy subtitles between two same Amara videos.')
-   parser.add_argument('-c','--credentials',dest='apifile',default='myapi.txt', help='Text file containing your API key and username on the first line.')
    parser.add_argument('--skip-errors', dest='skip', default=False, action="store_true", help='Should I skip subtitles that could not be downloaded? \
          The list of failed YTID\' will be printed to \"failed_yt.dat\".')
    parser.add_argument('--rewrite', dest='always_rewrite', action="store_true", help='Always rewrite existing subtitles on upload. Use with extreme care')
@@ -32,7 +31,6 @@ def read_cmd():
 
 opts = read_cmd()
 infile = opts.input_file
-apifile = opts.apifile
 lang = opts.lang
 never_rewrite  = not opts.never_rewrite
 always_rewrite = opts.always_rewrite
@@ -65,19 +63,29 @@ with open(infile, "r") as f:
 
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
-file = open(apifile, "r")
-API_KEY, USERNAME = file.read().split()[0:]
-print('Using Amara username: '+USERNAME)
-#print('Using Amara API key: '+API_KEY)
+AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "SECRETS/amara_api_credentials.txt"))
+# File 'apifile' should contain only one line with your Amara API key and Amara username.
+# Amara API can be found in Settins->Account-> API Access (bottom-right corner)
+with open(AMARA_API_FILE, "r") as f:
+    cols = f.read().split()
+    if len(cols) > 2:
+        print("ERROR: Invalid input in file %s" % AMARA_API_FILE)
+        sys.exit(1)
+    elif len(cols) == 2:
+        # NOTE(danielhollas): amara_username is optional
+        # It is no longer required in amara_headers
+        amara_username = cols[1]
+        print('Using Amara username: ' + amara_username)
+    amara_api_key = cols[0]
 
-call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
-
+print('Using Amara username: %s' % (amara_username))
 amara_headers = {
    'Content-Type': 'application/json',
-   'X-api-username': USERNAME,
-   'X-api-key': API_KEY,
+   'X-api-key': amara_api_key,
    'format': 'json'
 }
+
+call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
 
 if len(ytids) < 20: # Do not print for large inputs
    print("This is what I got from the input file:")
