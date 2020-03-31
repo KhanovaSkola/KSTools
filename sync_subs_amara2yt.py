@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-from __future__ import print_function
+#!/usr/bin/python3
+# Anaconda Python...for some reason does not work
+##!/usr/bin/env python3
 import os, sys, requests
 from oauth2client.tools import argparser
 
@@ -47,7 +48,7 @@ ytids = []
 # We skip lines beginning with "#"
 with open(opts.input_file, "r") as f:
     for line in f:
-        l = line.split(" ")
+        l = line.split()
         if len(l) > 0 and l[0][0] != "#":
             ytids.append(l[0])
 
@@ -104,7 +105,7 @@ for i in range(len(ytids)):
     sys.stdout.flush()
     sys.stderr.flush()
 
-    captions = ytapi.list_captions(youtube, ytid_from, verbose=False)
+    captions = ytapi.list_captions(youtube, ytid_from, verbose = opts.verbose)
 
     captions_present = False
     for item in captions:
