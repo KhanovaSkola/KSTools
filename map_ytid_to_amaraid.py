@@ -10,7 +10,6 @@ def read_cmd():
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
    parser.add_argument('-l', '--lang', dest = 'lang', required = True, help='What language?')
-   parser.add_argument('-c', '--credentials', dest = 'apifile', required = True, help='Text file containing your API key and username on the first line.')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -23,14 +22,14 @@ with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
+AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "SECRETS/amara_api_credentials.txt"))
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settings -> Account -> API Access (bottom-right corner)
-file = open(opts.apifile, "r")
-API_KEY, USERNAME = file.read().split()[0:]
+file = open(AMARA_API_FILE, "r")
+API_KEY = file.read().split()[0]
 
 amara_headers = {
    'Content-Type': 'application/json',
-   'X-api-username': USERNAME,
    'X-api-key': API_KEY,
    'format': 'json'
 }
@@ -48,10 +47,10 @@ for i in range(len(ytids)):
     sys.stdout.flush()
     sys.stderr.flush()
 
-    video_url = 'https://www.youtube.com/watch?v='+ytid_from
+    video_url = 'https://www.youtube.com/watch?v=%s' % ytid_from
 
     # Check whether the video is already on Amara
-    amara_response = check_video( video_url, amara_headers, s = ses)
+    amara_response = check_video(video_url, amara_headers, s = ses)
     if amara_response['meta']['total_count'] == 0:
         amara_response = add_video(video_url, lang, amara_headers)
         amara_id = amara_response['id']

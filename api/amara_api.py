@@ -46,7 +46,7 @@ def my_post(url, body, amara_headers, session=None):
         return r.json()
 
     except requests.HTTPError as e:
-        eprint('ERROR for video',video_url)
+        eprint('ERROR for video %s\n' % url)
         eprint(e,"in amara_api::add_video")
         try:
             eprint(r.json())

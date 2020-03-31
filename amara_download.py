@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from subprocess import Popen, PIPE, call, check_call
-import argparse, sys
+import argparse, sys, os
 from pprint import pprint
 import api.amara_api as amara_api
 import requests
@@ -22,12 +22,10 @@ def read_cmd():
    parser.add_argument('-y',dest='yt', action="store_true", help='Download subtitles from YouTube.')
    parser.add_argument('-a',dest='amara', action="store_true", help='Download subtitles from Amara.')
    parser.add_argument('-v','--video', dest='video', action="store_true", default=False, help='Download video from YouTube in addition to subtitles.')
-   parser.add_argument('-c','--credentials', dest='apifile', help='Text file containing your Amara API key and username on the first line.')
    return parser.parse_args()
 
 opts = read_cmd()
 infile = opts.input_file
-apifile = opts.apifile
 lang = opts.lang
 
 
@@ -50,13 +48,11 @@ with open(infile, "r") as f:
         if l[0][0] != "#":
             ytids.append(line.split())
 
+AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "SECRETS/amara_api_credentials.txt"))
 # File 'apifile' should contain only one line with your Amara API key and Amara username.
 # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
 if not opts.yt:
-    if not apifile:
-        print("ERROR: You did not provide file with Amara API credentials!")
-        sys.exit(1)
-    file = open(apifile, "r")
+    file = open(AMARA_API_FILE, "r")
     API_KEY, USERNAME = file.read().split()[0:]
     print('Using Amara username: '+USERNAME)
     print('Using Amara API key: '+API_KEY)
