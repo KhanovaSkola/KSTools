@@ -64,7 +64,7 @@ def get_authenticated_service(args):
     credentials = run_flow(flow, storage, args)
 
   # https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
-  with open("api/youtube-v3-api-captions.json", "r") as f:
+  with open("%s/youtube-v3-api-captions.json" % os.path.dirname(__file__), "r") as f:
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
@@ -97,9 +97,10 @@ def upload_caption(youtube, video_id, language, name, is_draft, file):
         language=language,
         name=name,
         isDraft=is_draft
-      )
+      ),
     ),
-    media_body=file
+    media_mime_type = 'text/xml',
+    media_body = file,
     ).execute()
   except HttpError as e:
       print("Got the following error during sub upload, YTID = ", video_id)
@@ -127,6 +128,7 @@ def update_caption(youtube, video_id, language, caption_id, is_draft, file):
         isDraft=is_draft
       )
     ),
+    media_mime_type = 'text/xml',
     media_body=file
     ).execute()
 

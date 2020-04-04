@@ -9,7 +9,7 @@ from utils import eprint, epprint
 import api.amara_api as amara
 import api.ytapi_captions_oauth as ytapi
 
-#SUPPORTED_LANGUAGES = ['cs','bg','ko','pl']
+#SUPPORTED_LANGUAGES = ['cs','bg','ko','pl', 'my']
 # SAFETY MEASURE 
 SUPPORTED_LANGUAGES = ['cs']
 
@@ -133,7 +133,7 @@ for i in range(len(ytids)):
 
     # PART 2: DOWNLOAD SUBTITLES FROM AMARA
     subs = amara.download_subs(amara_id, opts.lang, SUB_FORMAT, amara_headers, s=am_ses )
-    subs_fname = TEMP_FOLDER + '/' + ytid_from + '.' + opts.lang + '.srt'
+    subs_fname = "%s/%s.%s.%s" % (TEMP_FOLDER, ytid_from, opts.lang, SUB_FORMAT)
     with open(subs_fname, "w") as f:
         f.write(subs)
 
