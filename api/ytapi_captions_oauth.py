@@ -26,9 +26,7 @@ logging.basicConfig()
 #   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 SECRETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../SECRETS"))
 
-# The API client currently registered for private account danekhollas@gmail.com
-CLIENT_ID = "536936581201"
-CLIENT_SECRETS_FILE = "%s/client_secrets_%s.json" % (SECRETS_DIR, CLIENT_ID)
+CLIENT_SECRETS_FILE = "%s/google_client_secrets.json" % (SECRETS_DIR)
 
 # This OAuth 2.0 access scope allows for full read/write access to the
 # authenticated user's account and requires requests to use an SSL connection.
