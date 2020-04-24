@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import argparse, sys
+import argparse, sys, requests
 from pprint import pprint
-from api.amara_api import *
+import api.amara_api as amara
 from utils import answer_me
 
 def read_cmd():
@@ -22,15 +22,11 @@ with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
-AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "SECRETS/amara_api_credentials.txt"))
-# File 'apifile' should contain only one line with your Amara API key and Amara username.
-# Amara API can be found in Settings -> Account -> API Access (bottom-right corner)
-file = open(AMARA_API_FILE, "r")
-API_KEY = file.read().split()[0]
 
+amara_api_key = amara.get_api_key()
 amara_headers = {
    'Content-Type': 'application/json',
-   'X-api-key': API_KEY,
+   'X-api-key': amara_api_key,
    'format': 'json'
 }
 
@@ -50,18 +46,16 @@ for i in range(len(ytids)):
     video_url = 'https://www.youtube.com/watch?v=%s' % ytid_from
 
     # Check whether the video is already on Amara
-    amara_response = check_video(video_url, amara_headers, s = ses)
+    amara_response = amara.check_video(video_url, amara_headers, s = ses)
     if amara_response['meta']['total_count'] == 0:
-        amara_response = add_video(video_url, lang, amara_headers)
+        amara_response = amara.add_video(video_url, lang, amara_headers)
         amara_id = amara_response['id']
         amara_title =  amara_response['title']
         sub_version = 0
-        #print(ytid_from, AMARA_BASE_URL+'cs/subtitles/editor/'+amara_id+'/'+lang)
-        print(AMARA_BASE_URL + opts.lang + '/subtitles/editor/' + amara_id + '/' + opts.lang, '\t', sub_version, '\t', amara_title)
-        #print("Video not on Amara!", ytid_from)
     else:
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
-        lang_present, sub_version = check_language(amara_id, opts.lang, amara_headers, s = ses)
-        print(AMARA_BASE_URL + opts.lang + '/subtitles/editor/' + amara_id + '/' + opts.lang + '/?experimental=1', '\t', sub_version, '\t', amara_title)
+        lang_present, sub_version = amara.check_language(amara_id, opts.lang, amara_headers, s = ses)
+
+    print("%s/%s/subtitles/editor/%s/%s/?experimental=1\t%s\t%s" % (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, sub_version, amara_title))
 

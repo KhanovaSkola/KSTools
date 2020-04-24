@@ -7,10 +7,31 @@ from utils import *
 AMARA_BASE_URL = 'https://amara.org/'
 EXIT_ON_HTTPERROR  = False
 
-# Additional parameter 's' is the request Session object
+# File 'apifile' should contain only one line with your Amara API key and (optionally) Amara username.
+# Amara API can be found in Settins->Account-> API Access (bottom-right corner)
+AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../SECRETS/amara_api_credentials.txt"))
+
+# Reads and returns user API key
+def get_api_key():
+    with open(AMARA_API_FILE, "r") as f:
+        cols = f.read().split()
+        if len(cols) > 2:
+            print("ERROR: Invalid input in file %s" % AMARA_API_FILE)
+            sys.exit(1)
+        elif len(cols) == 2:
+            # NOTE(danielhollas): amara_username is optional
+            # It is no longer required in amara_headers so we'll only print it here
+            # but do not return
+            amara_username = cols[1]
+            print('Using Amara username: ' + amara_username)
+
+        amara_api_key = cols[0]
+
+    return amara_api_key
+
+# Additional parameter 'session' is the request Session object
 # which maintains persistent connection
 # http://docs.python-requests.org/en/master/user/advanced/
-
 def my_get(url, body, amara_headers, session=None):
     try:
         if session is None:
