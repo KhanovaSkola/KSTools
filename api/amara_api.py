@@ -123,15 +123,15 @@ def check_language(amara_id, lang, amara_headers, s=None, url=0):
         return (is_lang_present, sub_version)
 
 
-def upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers,s=None):
+def upload_subs(amara_id, lang, subtitles_complete, subs, sub_format, amara_headers,s=None):
     url = AMARA_BASE_URL + 'api/videos/'+amara_id+'/languages/'+lang+'/subtitles/'
     body = { 
         'subtitles': subs,
         'sub_format': sub_format,
         'language_code': lang,
-        'subtitles_complete': is_complete,
-        #'action': "Publish"
         }
+    if subtitles_complete:
+        body['action'] = 'publish'
 
     json_response = my_post(url, body, amara_headers, session=s)
 
