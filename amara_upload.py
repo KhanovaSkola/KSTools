@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from subprocess import Popen, PIPE, call, check_call
+from subprocess import Popen, PIPE
 import argparse, sys, requests
 from pprint import pprint
 import api.amara_api as amara
@@ -67,15 +67,15 @@ amara_headers = {
    'format': 'json'
 }
 
-call("rm -f youtubedl.err youtubedl.out failed_yt.dat", shell=True)
+try:
+    os.remove('youtubedl.out')
+    os.remove('youtubedl.err')
+except:
+    pass
 
 if len(ytids) < 20: # Do not print for large inputs
    print("This is what I got from the input file:")
    print(ytids)
-
-   answer = answer_me("Should I proceed?")
-   if not answer:
-      sys.exit(1)
 
 # Create persistent HTTP session
 ses = requests.Session()
@@ -203,6 +203,4 @@ for i in range(len(ytids)):
         sys.exit(1)
 
     print('----------------------------------------')
-
-
 
