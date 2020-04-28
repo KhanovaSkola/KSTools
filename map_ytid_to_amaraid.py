@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse, sys, requests
 from pprint import pprint
-import api.amara_api as amara
+from api.amara_api import Amara
 from utils import answer_me
 
 def read_cmd():
@@ -22,16 +22,7 @@ with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
-
-amara_api_key = amara.get_api_key()
-amara_headers = {
-   'Content-Type': 'application/json',
-   'X-api-key': amara_api_key,
-   'format': 'json'
-}
-
-# Create persistent HTTP session
-ses = requests.Session()
+amara = Amara()
 
 # Main loop
 for i in range(len(ytids)):
@@ -46,16 +37,18 @@ for i in range(len(ytids)):
     video_url = 'https://www.youtube.com/watch?v=%s' % ytid_from
 
     # Check whether the video is already on Amara
-    amara_response = amara.check_video(video_url, amara_headers, s = ses)
+    amara_response = amara.check_video(video_url)
     if amara_response['meta']['total_count'] == 0:
-        amara_response = amara.add_video(video_url, lang, amara_headers)
+        # Video is not yet on Amara so let's add it!
+        amara_response = amara.add_video(video_url, lang)
         amara_id = amara_response['id']
         amara_title =  amara_response['title']
         sub_version = 0
+
     else:
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
-        lang_present, sub_version = amara.check_language(amara_id, opts.lang, amara_headers, s = ses)
+        lang_present, sub_version = amara.check_language(amara_id, opts.lang)
 
     print("%s/%s/subtitles/editor/%s/%s/?experimental=1\t%s\t%s" % (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, sub_version, amara_title))
 

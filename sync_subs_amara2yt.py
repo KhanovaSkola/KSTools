@@ -5,8 +5,7 @@ import os, sys, requests
 from oauth2client.tools import argparser
 
 from utils import eprint, epprint
-
-import api.amara_api as amara
+from api.amara_api import Amara
 import api.ytapi_captions_oauth as ytapi
 
 #SUPPORTED_LANGUAGES = ['cs','bg','ko','pl', 'my']
@@ -33,7 +32,6 @@ if opts.publish:
 else:
     is_draft = True
 
-
 if opts.lang not in SUPPORTED_LANGUAGES:
     print("ERROR: We do not support upload for language " + opts.lang)
     print("If this is not a typo, modify variable \"SUPPORTED_LANGUAGES\"")
@@ -52,12 +50,6 @@ with open(opts.input_file, "r") as f:
         if len(l) > 0 and l[0][0] != "#":
             ytids.append(l[0])
 
-amara_api_key = amara.get_api_key()
-amara_headers = {
-   'Content-Type': 'application/json',
-   'X-api-key': amara_api_key,
-   'format': 'json'
-}
 
 TEMP_FOLDER = 'subs'
 if not os.path.isdir(TEMP_FOLDER):
@@ -67,10 +59,7 @@ if not os.path.isdir(TEMP_FOLDER):
         print("Could not create temp directory %s" % (TEMP_FOLDER))
         raise
 
-# create persistent session for Amara
-am_ses = requests.Session()
-
-# Create session with YT (I hope it is persistent)
+amara = Amara()
 youtube = ytapi.get_authenticated_service(opts)
 
 uploaded = 0
@@ -101,7 +90,7 @@ for i in range(len(ytids)):
             captionid = id
 
     # PART 1: Check video on AMARA
-    amara_response = amara.check_video(video_url, amara_headers, s=am_ses)
+    amara_response = amara.check_video(video_url)
     if amara_response['meta']['total_count'] == 0:
         print("Video not found on Amara for YTID %s" % ytid)
         sys.exit(1)
@@ -110,13 +99,13 @@ for i in range(len(ytids)):
         amara_id = amara_response['objects'][0]['id']
         amara_title = amara_response['objects'][0]['title']
 
-        lang_present, sub_version = amara.check_language(amara_id, opts.lang, amara_headers)
+        lang_present, sub_version = amara.check_language(amara_id, opts.lang)
         if not lang_present or sub_version <= 0:
             print("Subtitles not found on Amara for YTID=%s" % ytid)
             sys.exit(1)
 
     # PART 2: DOWNLOAD SUBTITLES FROM AMARA
-    subs = amara.download_subs(amara_id, opts.lang, SUB_FORMAT, amara_headers, s=am_ses )
+    subs = amara.download_subs(amara_id, opts.lang, SUB_FORMAT)
     subs_fname = "%s/%s.%s.%s" % (TEMP_FOLDER, ytid, opts.lang, SUB_FORMAT)
     with open(subs_fname, "w") as f:
         f.write(subs)
@@ -141,7 +130,6 @@ for i in range(len(ytids)):
         else:
             print("Unspecified ERROR while uploading subtitles")
             sys.exit(1)
-
 
 print("\nFinished!")
 print("Succesfuly uploaded %d videos." % uploaded)

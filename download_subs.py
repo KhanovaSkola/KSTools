@@ -2,7 +2,7 @@
 import argparse, sys, os, requests
 from subprocess import Popen, PIPE
 from pprint import pprint
-import api.amara_api as amara
+from api.amara_api import Amara
 from utils import answer_me, download_yt_subtitles
 
 sub_format = 'srt'
@@ -51,16 +51,7 @@ except:
     pass
 
 if opts.amara:
-    amara_api_key = amara.get_api_key()
-    amara_headers = {
-        'Content-Type': 'application/json',
-        'X-api-key': amara_api_key,
-        'format': 'json'
-    }
-    # Create persistent HTTP session
-    # TODO: We should encapsulate Amara API in a class 
-    # and handle this internally!
-    ses = requests.Session()
+    amara = Amara()
 
 # Main loop
 for i in range(len(ytids)):
@@ -87,7 +78,7 @@ for i in range(len(ytids)):
     elif opts.amara:
 
         # First, get Amara ID
-        amara_response = amara.check_video(video_url, amara_headers, s = ses)
+        amara_response = amara.check_video(video_url)
         if amara_response['meta']['total_count'] == 0:
             print("ERROR: Video is not on Amara! YTID=%s" % ytid)
             sys.exit(1)
@@ -96,10 +87,10 @@ for i in range(len(ytids)):
             amara_title =  amara_response['objects'][0]['title']
             print("Downloading %s subtitles from:" % opts.lang)
             print("Title: %s" % amara_title)
-            print(amara.AMARA_BASE_URL + 'cs/videos/' + amara_id_from)
+            print("%s/cs/videos/%s" % (amara.AMARA_BASE_URL, amara_id_from))
 
         # Check whether subtitles for a given language are present,
-        is_present, sub_version = amara.check_language(amara_id_from, opts.lang, amara_headers, s = ses)
+        is_present, sub_version = amara.check_language(amara_id_from, opts.lang)
         if is_present:
             print("Subtitle revision number: %d" % sub_version)
         else:
@@ -107,7 +98,7 @@ for i in range(len(ytids)):
             sys.exit(1)
  
         # Download and write subtitles from Amara for a given language
-        subs = amara.download_subs(amara_id_from, opts.lang, sub_format, amara_headers, s = ses)
+        subs = amara.download_subs(amara_id_from, opts.lang, sub_format)
         fname = "%s/%s.%s.%s" % (opts.dirname, ytid, opts.lang, sub_format)
         with open(fname, 'w') as f:
             f.write(subs)

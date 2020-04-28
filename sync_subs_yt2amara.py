@@ -2,7 +2,7 @@
 from subprocess import Popen, PIPE, call, check_call
 import argparse, sys, os, requests
 from pprint import pprint
-import api.amara_api as amara
+from api.amara_api import Amara
 from utils import eprint, epprint, download_yt_subtitles
 
 # We suppose that the uploaded subtitles are complete (non-critical)
@@ -46,16 +46,6 @@ with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
-amara_api_key = amara.get_api_key()
-# TODO: Move amara_headers into amara_api.py
-# We really should create an amara class and have 
-# amara_headers, api_key and session as private vars
-amara_headers = {
-   'Content-Type': 'application/json',
-   'X-api-key': amara_api_key,
-   'format': 'json'
-}
-
 try:
     os.remove("youtubedl.out")
     os.remove("youtubedl.err")
@@ -92,8 +82,7 @@ except FileNotFoundError as e:
 uploaded = 0
 missing = 0
 
-# create persistent session with Amara
-am_ses = requests.Session()
+amara = Amara()
 
 # Main loop
 for i in range(len(ytids)):
@@ -118,7 +107,7 @@ for i in range(len(ytids)):
     f_vids.flush()
 
 #   Check whether video is on Amara, if not create it
-    amara_response = amara.check_video(video_url, amara_headers, s=am_ses)
+    amara_response = amara.check_video(video_url)
     if not amara_response or amara_response['meta']['total_count'] == 0:
         video_present = False
         lang_present  = False
@@ -135,38 +124,38 @@ for i in range(len(ytids)):
                 #if lg["visible"] == True:
                 #    lang_visible = True
                 break
-        lang_present, sub_version = amara.check_language(amara_id, opts.lang, amara_headers, s  = am_ses)
+        lang_present, sub_version = amara.check_language(amara_id, opts.lang)
         if lang_present and lang_visible and sub_version > 0:
             f_vids.write(ytid + '\n')
             if not opts.rewrite:
-                print("Subtitles already on Amara for video YTID: ", ytid)    
+                print("Subtitles already on Amara for video YTID=%s" % ytid)
                 print("Use \"-r\" option to overwrite them")
                 continue
 
     # Moved this here due to large number of Amara errors...
     if not video_present:
-        amara_response = amara.add_video(video_url, original_video_lang, amara_headers, s=am_ses)
+        amara_response = amara.add_video(video_url, original_video_lang)
         if "id" in amara_response:
             amara_id = amara_response['id']
             amara_title =  amara_response['title']
         else:
-            print("ERROR: During adding video to Amara:", ytid)
+            print("ERROR: During adding video to Amara. YTID=%s" % ytid)
             continue
         if opts.verbose:
-            print("Created video on Amara with Amara id "+amara_id)
-            print(amara.AMARA_BASE_URL+'cs/videos/'+amara_id)
+            print("Created video on Amara with AmaraId %s" % amara_id)
+            print("%s/cs/videos/%s" % (amara.AMARA_BASE_URL, amara_id))
 
 
-#   PART 2: GETTING THE SUBTITLES 
+    # PART 2: GETTING THE SUBTITLES FROM YOUTUBE
     # imported from utils.py
     subs = download_yt_subtitles(opts.lang, sub_format, ytid, TEMP_DIR)
 
-#   PART 3: Creating language on Amara
+    # PART 3: Creating language on Amara
     if not lang_present:
-        r = amara.add_language(amara_id, opts.lang, is_original, amara_headers, s=am_ses)
+        r = amara.add_language(amara_id, opts.lang, is_original)
 
-#   PART 4: UPLOADING THE SUBTITLES 
-    r = amara.upload_subs(amara_id, opts.lang, is_complete, subs, sub_format, amara_headers, s=am_ses)
+    # PART 4: UPLOADING THE SUBTITLES
+    r = amara.upload_subs(amara_id, opts.lang, is_complete, subs, sub_format)
     if not 'version_number' in r:
         print("ERROR: Failed to upload subs to Amara for YTID=%s" % ytid)
         epprint(r)

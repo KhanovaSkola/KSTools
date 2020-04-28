@@ -2,7 +2,7 @@
 from subprocess import Popen, PIPE
 import argparse, sys, requests
 from pprint import pprint
-import api.amara_api as amara
+from api.amara_api import Amara
 from utils import answer_me, download_yt_subtitles
 
 
@@ -60,12 +60,7 @@ with open(infile, "r") as f:
         if len(l) > 0 and l[0][0] != "#":
             ytids.append(line.split())
 
-amara_api_key = amara.get_api_key()
-amara_headers = {
-   'Content-Type': 'application/json',
-   'X-api-key': amara_api_key,
-   'format': 'json'
-}
+amara = Amara()
 
 try:
     os.remove('youtubedl.out')
@@ -76,9 +71,6 @@ except:
 if len(ytids) < 20: # Do not print for large inputs
    print("This is what I got from the input file:")
    print(ytids)
-
-# Create persistent HTTP session
-ses = requests.Session()
 
 # Main loop
 for i in range(len(ytids)):
@@ -98,7 +90,7 @@ for i in range(len(ytids)):
     download_first = False
     subs = False
     if opts.yt and download_first == True:
-        subs = download_yt_subtitles(lang, sub_format, ytid)
+        subs = download_yt_subtitles(lang, sub_format, ytid_from)
         if not subs:
             if opts.skip:
                 answer = True
@@ -115,9 +107,9 @@ for i in range(len(ytids)):
 
     elif opts.amara == True:
         # First, get first Amara ID
-        amara_response = amara.check_video( video_url_from, amara_headers, s=ses)
+        amara_response = amara.check_video(video_url_from)
         if amara_response['meta']['total_count'] == 0:
-            print("ERROR: Source video is not on Amara! YT id"+ytid_from)
+            print("ERROR: Source video is not on Amara! YTID=%s" % ytid_from)
             sys.exit(1)
         else:
             amara_id_from =  amara_response['objects'][0]['id']
@@ -127,27 +119,27 @@ for i in range(len(ytids)):
             print(amara.AMARA_BASE_URL + lang + '/videos/' + amara_id_from)
 
         # Check whether subtitles for a given language are present,
-        is_present, sub_version = amara.check_language(amara_id_from, lang, amara_headers, s=ses)
+        is_present, sub_version = amara.check_language(amara_id_from, lang)
         if is_present:
-            print("Subtitle revision number: "+str(sub_version))
+            print("Subtitle revision number: %d" % sub_version)
         else:
             print("ERROR: Amara does not have subtitles in "+lang+" language for this video!")
             sys.exit(1)
  
         # Download subtitles from Amara for a given language
-        subs = amara.download_subs(amara_id_from, lang, sub_format, amara_headers, s=ses )
+        subs = amara.download_subs(amara_id_from, lang, sub_format)
 
 
 #   PART 2: UPLOADING THE SUBTITLES 
 
     # Now check whether the video is already on Amara
     # If not, create it.
-    amara_response = amara.check_video( video_url_to, amara_headers, s=ses)
+    amara_response = amara.check_video(video_url_to)
     if amara_response['meta']['total_count'] == 0:
-        amara_response = amara.add_video(video_url_to, lang, amara_headers)
+        amara_response = amara.add_video(video_url_to, lang)
         amara_id = amara_response['id']
         amara_title =  amara_response['title']
-        print("Created video on Amara with Amara id "+amara_id)
+        print("Created video on Amara with Amara id %s" % amara_id)
         print("Title: " + amara_title)
         print(amara.AMARA_BASE_URL + lang + '/videos/' + amara_id)
     else:
@@ -161,14 +153,14 @@ for i in range(len(ytids)):
     # If not, ask the user whether to proceed anyway (might screw up the subs timing)
 
     if opts.amara == True:
-        amara.compare_videos(amara_id_from, amara_id, amara_headers, s=ses)
+        amara.compare_videos(amara_id_from, amara_id)
 
     # First check, whether subtitles for a given language are present,
     # then upload subtitles
-    is_present, sub_version = check_language(amara_id, lang, amara_headers, s=ses)
-    if is_present and int(sub_version) != "0":
-        print("Language "+lang+" is already present in Amara video id:"+amara_id)
-        print("Subtitle revision number: "+str(sub_version))
+    is_present, sub_version = amara.check_language(amara_id, lang)
+    if is_present and sub_version != 0:
+        print("Language %s is already present in Amara video id:%s" % (opts.lang, amara_id))
+        print("Subtitle revision number: %d" % sub_version)
         if never_rewrite:
            answer = False
         elif always_rewrite:
@@ -178,11 +170,11 @@ for i in range(len(ytids)):
         if not answer:
             continue
     else:
-        r = amara.add_language(amara_id, lang, is_original, amara_headers, s=ses)
+        r = amara.add_language(amara_id, lang, is_original)
 
     # In certain cases we may want to download here
     if not subs:
-        subs = download_yt_subtitles(lang, sub_format, video_url_from)
+        subs = download_yt_subtitles(lang, sub_format, ytid_from)
         if not subs:
             if opts.skip:
                 answer = True
@@ -193,8 +185,8 @@ for i in range(len(ytids)):
             else:
                 sys.exit(1)
 
-    r = amara.upload_subs(amara_id, lang, is_complete, subs, sub_format, amara_headers, s=ses)
-    if r['version_number'] == int(sub_version)+1:
+    r = amara.upload_subs(amara_id, lang, is_complete, subs, sub_format)
+    if r['version_number'] == sub_version + 1:
         print('Succesfully uploaded subtitles to: '+r['site_uri'])
     else:
         print("This is weird. Something probably went wrong during upload.")
