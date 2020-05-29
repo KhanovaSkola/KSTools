@@ -123,7 +123,7 @@ class Amara:
         next = json_response['meta']['next']
        
         if is_lang_present == False and next != None:
-            return check_language(amara_id, lang, url = next)
+            return self.check_language(amara_id, lang, url = next)
         else:
             return (is_lang_present, sub_version)
 

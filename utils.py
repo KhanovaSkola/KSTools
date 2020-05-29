@@ -58,6 +58,8 @@ an invalid filename."""
 # Some usefull functions for manipulating Khan content tree
 
 def print_children_titles(content_tree):
+    if 'children' not in content_tree:
+        return
     print("------------------------")
     print("Topic title | Topic slug")
     print("------------------------")

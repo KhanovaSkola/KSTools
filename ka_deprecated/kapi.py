@@ -3,7 +3,7 @@
 import json, sys, os
 import requests 
 from pprint import pprint
-from utils import load_obj_bin, save_obj_bin, eprint
+import utils
 
 # And pass locale in constructor
 SERVER_URL = 'https://www.khanacademy.org'
@@ -42,10 +42,10 @@ class KhanAPI:
             return r.json()
 
         except requests.HTTPError as e:
-            eprint('HTTP error for URL: ', url)
-            eprint(e)
+            utils.eprint('HTTP error for URL: ', url)
+            utils.eprint(e)
             try:
-                eprint(r.json())
+                utils.eprint(r.json())
             except:
                 # Catch exception when r.json is empty
                 pass
@@ -99,7 +99,7 @@ class KhanContentTree():
         self.file_name = "khan_tree_" + locale + '_' + self.content_type + "_bin.pkl"
 
     def save(self, tree):
-        save_obj_bin(tree, self.file_name)
+        utils.save_obj_bin(tree, self.file_name)
         self.content_tree = tree
 
     def load(self):
@@ -107,7 +107,7 @@ class KhanContentTree():
             print("ERROR: Could not load content tree from file '%s'" % (self.file_name))
             # TODO: Try to download Khan Tree here
             sys.exit(1)
-        self.content_tree = load_obj_bin(self.file_name)
+        self.content_tree = utils.load_obj_bin(self.file_name)
 
     def get(self):
         if self.content_tree is None:
