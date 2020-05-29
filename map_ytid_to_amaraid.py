@@ -50,5 +50,5 @@ for i in range(len(ytids)):
         amara_title = amara_response['objects'][0]['title']
         lang_present, sub_version = amara.check_language(amara_id, opts.lang)
 
-    print("%s/%s/subtitles/editor/%s/%s/?experimental=1\t%s\t%s" % (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, sub_version, amara_title))
+    print("%s/%s/subtitles/editor/%s/%s/\t%s\t%s" % (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, sub_version, amara_title))
 
