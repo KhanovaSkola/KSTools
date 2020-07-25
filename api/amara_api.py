@@ -2,7 +2,9 @@
 import json, sys, os
 import requests 
 from pprint import pprint
-from utils import answer_me, eprint
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 class Amara:
 
@@ -200,15 +202,10 @@ class Amara:
         if len1 == len2:
             return True
         else:
-            # TODO: Push this logic out of here!
+            print('ERROR: The lengths of the two videos are different.')
             print('The length of the first video is:' + str(len1))
             print('The length of the second video is:' + str(len2))
-            answer = answer_me("The lengths of the two videos are different. Should I proceed anyway?")
-            if answer:
-                return False
-            else:
-                sys.exit(1)
-
+            return False
 
     def add_primary_audio_lang(self, amara_id, video_lang):
         url = "%s/api/videos/%s/" % (self.AMARA_BASE_URL, amara_id)
