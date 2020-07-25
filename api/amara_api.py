@@ -7,14 +7,15 @@ from utils import answer_me, eprint
 class Amara:
 
     AMARA_BASE_URL = 'https://amara.org'
-    EXIT_ON_HTTPERROR  = False
+    EXIT_ON_HTTPERROR  = True
     
     # File 'apifile' should contain only one line with your Amara API key and (optionally) Amara username.
     # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
     AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../SECRETS/amara_api_credentials.txt"))
 
-    def __init__(self):
-        api_key = self._get_api_key()
+    def __init__(self, username = 'dhbot'):
+        self.username = username
+        api_key = self._get_api_key(username)
         self.headers = {
             'Content-Type': 'application/json',
             'X-api-key': api_key,
@@ -24,23 +25,21 @@ class Amara:
         # http://docs.python-requests.org/en/master/user/advanced/
         self.session = requests.Session()
 
-    def _get_api_key(self):
-        """Reads and returns user API key from pre-defined file"""
+    def _get_api_key(self, username):
+        """Reads API key from pre-defined file for a given username"""
+        print("Using Amara username %s" % username)
         with open(self.AMARA_API_FILE, "r") as f:
-            cols = f.read().split()
-            if len(cols) > 2:
-                print("ERROR: Invalid input in file %s" % AMARA_API_FILE)
-                sys.exit(1)
-            elif len(cols) == 2:
-                # NOTE(danielhollas): amara_username is optional
-                # It is no longer required in amara_headers so we'll only print it here
-                # but do not return
-                amara_username = cols[1]
-                print('Using Amara username: ' + amara_username)
- 
-            amara_api_key = cols[0]
- 
-        return amara_api_key
+            for line in f:
+                cols = line.strip().split()
+                if len(cols) != 2:
+                    eprint("ERROR: Invalid input in file %s" % self.AMARA_API_FILE)
+                    sys.exit(1)
+                api_key = cols[0]
+                if cols[1] == username:
+                    return api_key
+
+        eprint("ERROR: Could not find API key for username %s" % username)
+        sys.exit(1)
 
     def _get(self, url, body):
         try:
@@ -66,18 +65,33 @@ class Amara:
  
         except requests.HTTPError as e:
             eprint('ERROR for video %s\n' % url)
-            eprint("Response:", r)
+            eprint(r)
             if self.EXIT_ON_HTTPERROR:
                 sys.exit(1)
             else:
-                return {}
+                return r
+
+    def _put(self, url, body):
+        try:
+            r = self.session.put(url, data = json.dumps(body), headers = self.headers)
+            r.raise_for_status()
+            return r.json()
+        except requests.HTTPError as e:
+            eprint('ERROR: PUT request %s failed\n' % url)
+            eprint(r)
+            if self.EXIT_ON_HTTPERROR:
+                sys.exit(1)
+            else:
+                return r
  
 
-    def check_video(self, video_url):
+    def check_video(self, video_url, team = None):
         url = "%s/api/videos/" % self.AMARA_BASE_URL
         body = { 
             'video_url': video_url
             }
+        if team is not None:
+            body['team'] = team
         return self._get(url, body)
 
 
@@ -135,8 +149,10 @@ class Amara:
             'sub_format': sub_format,
             'language_code': lang,
             }
-        if subtitles_complete:
-            body['action'] = 'publish'
+#        if subtitles_complete:
+#            body['action'] = 'publish'
+#        else:
+#            body['action'] = 'save-draft'
  
         return self._post(url, body)
 
@@ -213,4 +229,43 @@ class Amara:
                 return {}
  
         return json_response
+
+    def list_actions(self, amara_id, lang):
+        url = "%s/api/videos/%s/languages/%s/subtitles/actions/" \
+                % (self.AMARA_BASE_URL, amara_id, lang)
+        body = {}
+        return self._get(url, body)
+
+
+    def perform_action(self, action, amara_id, lang):
+        url = "%s/api/videos/%s/languages/%s/subtitles/actions/" \
+                % (self.AMARA_BASE_URL, amara_id, lang)
+        body = {'actions': action}
+        response = self._get(url, body)
+        return response
+
+    def list_subtitle_requests(self, amara_id, lang, team):
+        url = "%s/api/teams/%s/subtitle-requests/" \
+                % (self.AMARA_BASE_URL, team)
+        body = {
+           'video': amara_id,
+           'language': lang,
+        }
+        return self._get(url, body)
+
+    def assign_video(self, job_id, team):
+        url = "%s/api/teams/%s/subtitle-requests/%s/" \
+                % (self.AMARA_BASE_URL, team, job_id)
+        body = {
+           'subtitler': self.username,
+        }
+        return self._put(url, body)
+
+    def mark_video_complete(self, job_id, team):
+        url = "%s/api/teams/%s/subtitle-requests/%s/" \
+                % (self.AMARA_BASE_URL, team, job_id)
+        body = {
+           'work_status': 'complete',
+        }
+        return self._put(url, body)
 

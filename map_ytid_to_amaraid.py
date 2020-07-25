@@ -10,10 +10,15 @@ def read_cmd():
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
    parser.add_argument('-l', '--lang', dest = 'lang', required = True, help='What language?')
+   parser.add_argument('--amara-public', dest = 'amara_public' ,action='store_true', help='Generate link to Amara public workspace.')
    return parser.parse_args()
+
 
 opts = read_cmd()
 lang = opts.lang
+amara_team = "khan-academy"
+if opts.amara_public:
+    amara_team = None
 
 # List ytids may also contain filenames
 ytids = []
@@ -37,7 +42,7 @@ for i in range(len(ytids)):
     video_url = 'https://www.youtube.com/watch?v=%s' % ytid_from
 
     # Check whether the video is already on Amara
-    amara_response = amara.check_video(video_url)
+    amara_response = amara.check_video(video_url, amara_team)
     if amara_response['meta']['total_count'] == 0:
         # Video is not yet on Amara so let's add it!
         amara_response = amara.add_video(video_url, lang)
@@ -50,5 +55,9 @@ for i in range(len(ytids)):
         amara_title = amara_response['objects'][0]['title']
         lang_present, sub_version = amara.check_language(amara_id, opts.lang)
 
-    print("%s/%s/subtitles/editor/%s/%s/\t%s\t%s" % (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, sub_version, amara_title))
+    amara_link = "%s/%s/subtitles/editor/%s/%s/" % (amara.AMARA_BASE_URL,
+            opts.lang, amara_id, opts.lang)
+    if amara_team:
+        amara_link += "?team=%s" % amara_team
+    print("%s\t%s\t%s" % (amara_link, sub_version, amara_title))
 
