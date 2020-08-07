@@ -151,10 +151,8 @@ class Amara:
             'sub_format': sub_format,
             'language_code': lang,
             }
-#        if subtitles_complete:
-#            body['action'] = 'publish'
-#        else:
-#            body['action'] = 'save-draft'
+        if subtitles_complete:
+            body['action'] = 'endorse'
  
         return self._post(url, body)
 
@@ -250,7 +248,7 @@ class Amara:
         }
         return self._get(url, body)
 
-    def assign_video(self, job_id, team):
+    def assign_subtitler(self, job_id, team):
         url = "%s/api/teams/%s/subtitle-requests/%s/" \
                 % (self.AMARA_BASE_URL, team, job_id)
         body = {
@@ -258,7 +256,23 @@ class Amara:
         }
         return self._put(url, body)
 
-    def mark_video_complete(self, job_id, team):
+    def assign_reviewer(self, job_id, team):
+        url = "%s/api/teams/%s/subtitle-requests/%s/" \
+                % (self.AMARA_BASE_URL, team, job_id)
+        body = {
+           'reviewer': self.username,
+        }
+        return self._put(url, body)
+
+    def unassign_reviewer(self, job_id, team):
+        url = "%s/api/teams/%s/subtitle-requests/%s/" \
+                % (self.AMARA_BASE_URL, team, job_id)
+        body = {
+           'reviewer': None,
+        }
+        return self._put(url, body)
+
+    def mark_subtitles_complete(self, job_id, team):
         url = "%s/api/teams/%s/subtitle-requests/%s/" \
                 % (self.AMARA_BASE_URL, team, job_id)
         body = {
