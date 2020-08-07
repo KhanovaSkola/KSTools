@@ -4,13 +4,19 @@ from pprint import pprint
 from api.amara_api import Amara
 from utils import answer_me
 
+def print_header():
+    print("Amara link | Number of subtitle revisions | Video Title")
+
 def read_cmd():
    """Function for reading command line options."""
    desc = "Program for mapping YouTube IDs to Amara IDs. If given video is not on Amara, it is created."
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
-   parser.add_argument('-l', '--lang', dest = 'lang', required = True, help='What language?')
-   parser.add_argument('--amara-public', dest = 'amara_public' ,action='store_true', help='Generate link to Amara public workspace.')
+   parser.add_argument('-l', '--lang', dest = 'lang',
+          required = True, help='What language?')
+   parser.add_argument('--amara-public', dest = 'amara_public',
+          action = 'store_true', 
+          help='Generate links to Amara public workspace.')
    return parser.parse_args()
 
 
@@ -28,6 +34,8 @@ with open(opts.input_file, "r") as f:
         ytids.append(line.split())
 
 amara = Amara()
+
+print_header()
 
 # Main loop
 for i in range(len(ytids)):
@@ -55,9 +63,13 @@ for i in range(len(ytids)):
         amara_title = amara_response['objects'][0]['title']
         lang_present, sub_version = amara.check_language(amara_id, opts.lang)
 
-    amara_link = "%s/%s/subtitles/editor/%s/%s/" % (amara.AMARA_BASE_URL,
-            opts.lang, amara_id, opts.lang)
     if amara_team:
-        amara_link += "?team=%s" % amara_team
+        amara_link = "%s/%s/videos/%s/%s/?team=%s" % \
+                (amara.AMARA_BASE_URL, opts.lang, amara_id, opts.lang, amara_team)
+    else:
+        amara_link = "%s/%s/subtitles/editor/%s/%s/" % (amara.AMARA_BASE_URL,
+            opts.lang, amara_id, opts.lang)
+
+
     print("%s\t%s\t%s" % (amara_link, sub_version, amara_title))
 
