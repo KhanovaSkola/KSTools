@@ -1,0 +1,421 @@
+Using Amara username danekhollas
+Using Amara username dhbot
+
+######################################
+
+Title: A5 YTID=0XAE9Q9jfBY
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/a8eDTFoCnb6L/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:48:17Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'Q2J9MYV',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/Q2J9MYV/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/a8eDTFoCnb6L/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'a8eDTFoCnb6L',
+ 'video_uri': 'https://amara.org/api/videos/a8eDTFoCnb6L/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM1 FIX YTID=F-FZzJdMyNk
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/xYPBQZdxiNm2/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:10Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'P46DK9A',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/P46DK9A/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/xYPBQZdxiNm2/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'xYPBQZdxiNm2',
+ 'video_uri': 'https://amara.org/api/videos/xYPBQZdxiNm2/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM4 FIX YTID=tYrst6lFOGU
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/TEetIXOR6iHo/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:13Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'G3A78WE',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/G3A78WE/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/TEetIXOR6iHo/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'TEetIXOR6iHo',
+ 'video_uri': 'https://amara.org/api/videos/TEetIXOR6iHo/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: Video5 launch YTID=1EKs0YXIpUs
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/XKPJUF1IZh4F/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:04Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': '6TGOHEY',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/6TGOHEY/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/XKPJUF1IZh4F/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'XKPJUF1IZh4F',
+ 'video_uri': 'https://amara.org/api/videos/XKPJUF1IZh4F/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: gtk launch YTID=CWozHe2iMCY
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/kN5xJakftmDe/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:08Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'EH6COZJ',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/EH6COZJ/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/kN5xJakftmDe/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'kN5xJakftmDe',
+ 'video_uri': 'https://amara.org/api/videos/kN5xJakftmDe/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM7 FIX YTID=AmPb5HlB7Dk
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/DeSBbPYq66uC/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:14Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'KEY4G5L',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/KEY4G5L/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/DeSBbPYq66uC/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'DeSBbPYq66uC',
+ 'video_uri': 'https://amara.org/api/videos/DeSBbPYq66uC/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM8 FIX YTID=N52cRzvBPTI
+Subtitle revision 1 (Public Amara)
+Using Amara username danekhollas
+Using Amara username dhbot
+
+######################################
+
+Title: Computer Simulation (Pixar in a Box) YTID=YeYW8TIWLG8
+Subtitle revision 11 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/aaQ1W9uG5byT/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:02Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'KI2ZEU0',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/KI2ZEU0/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/aaQ1W9uG5byT/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'aaQ1W9uG5byT',
+ 'video_uri': 'https://amara.org/api/videos/aaQ1W9uG5byT/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM3 launch YTID=-3X6zDaJ8r4
+Subtitle revision 2 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/3Q0TxqAJa9xD/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:06Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'IOD8KAC',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/IOD8KAC/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/3Q0TxqAJa9xD/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': '3Q0TxqAJa9xD',
+ 'video_uri': 'https://amara.org/api/videos/3Q0TxqAJa9xD/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM9 FIX YTID=Jg0AuxtMUQ0
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/b3k86pvoqkWn/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:16Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'NZXCEAI',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/NZXCEAI/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/b3k86pvoqkWn/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'b3k86pvoqkWn',
+ 'video_uri': 'https://amara.org/api/videos/b3k86pvoqkWn/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM10 launch YTID=3wfMPxORS-4
+Subtitle revision 2 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/RVXf2RJ1Mpd8/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:06Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'IYCWAE0',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/IYCWAE0/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/RVXf2RJ1Mpd8/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'RVXf2RJ1Mpd8',
+ 'video_uri': 'https://amara.org/api/videos/RVXf2RJ1Mpd8/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: Sim6 edited YTID=MeQa3xMnAmw
+Subtitle revision 4 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/qNjMqHCuW2yg/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:00Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'G497PMU',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/G497PMU/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/qNjMqHCuW2yg/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'qNjMqHCuW2yg',
+ 'video_uri': 'https://amara.org/api/videos/qNjMqHCuW2yg/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: Color Science (Pixar in a Box) YTID=0DXZvcfPVrk
+Subtitle revision 15 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/hHCZstWMRHjc/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:19Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'EY4L0OZ',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/EY4L0OZ/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/hHCZstWMRHjc/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'hHCZstWMRHjc',
+ 'video_uri': 'https://amara.org/api/videos/hHCZstWMRHjc/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: Color science 6 YTID=L2dabO1z9KQ
+Subtitle revision 1 (Public Amara)
+{'actions_uri': 'https://amara.org/api/videos/64dkoeyzZof6/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:28Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': '2QCG1JL',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/2QCG1JL/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/64dkoeyzZof6/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': '64dkoeyzZof6',
+ 'video_uri': 'https://amara.org/api/videos/64dkoeyzZof6/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: SIM2 FIX YTID=BXRIQHvU9Fs
+Subtitle revision 5 (Public Amara)
+Subtitle revision 0 (Team Amara)
+{'actions_uri': 'https://amara.org/api/videos/o7EMlhOJ6aYb/languages/cs/subtitles/actions/',
+ 'approval_due_date': None,
+ 'approver': None,
+ 'completed': None,
+ 'created': '2020-06-16T18:46:12Z',
+ 'due_date': None,
+ 'evaluation_teams': [],
+ 'job_id': 'WD5SCER',
+ 'language': 'cs',
+ 'resource_uri': 'https://amara.org/api/teams/khan-academy/subtitle-requests/WD5SCER/',
+ 'review_due_date': None,
+ 'reviewer': None,
+ 'source_team': 'khan-academy',
+ 'status': 'in-progress',
+ 'subtitler': None,
+ 'subtitles_due_date': None,
+ 'subtitles_uri': 'https://amara.org/api/videos/o7EMlhOJ6aYb/languages/cs/subtitles/',
+ 'team': 'khan-academy',
+ 'video': 'o7EMlhOJ6aYb',
+ 'video_uri': 'https://amara.org/api/videos/o7EMlhOJ6aYb/',
+ 'work_completed': None,
+ 'work_status': 'needs-subtitler'}
+Assigning subtitler danekhollas
+Uploading new subtitles, complete=True
+
+######################################
+
+Title: VIdeo 4: World & Character YTID=tREPH6hJsYg
+Subtitle revision 19 (Public Amara)
