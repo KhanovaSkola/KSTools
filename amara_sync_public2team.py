@@ -3,6 +3,7 @@ import argparse, sys, requests
 from pprint import pprint
 from api.amara_api import Amara
 from utils import eprint
+from time import sleep
 
 def read_cmd():
    """Function for reading command line options."""
@@ -17,6 +18,11 @@ def read_cmd():
            dest = 'publish', default=False,
            action = 'store_true',
            help='Are subtitles complete?')
+   parser.add_argument('-s', '--sleep',
+           dest = 'sleep_int',
+           required = False,
+           type = float, default = -1,
+           help='Sleep interval (seconds)')
    return parser.parse_args()
 
 opts = read_cmd()
@@ -78,7 +84,7 @@ for i in range(len(ytids)):
     # Check whether the video is already on Amara
     amara_response = amara.check_video(video_url)
     if amara_response['meta']['total_count'] == 0:
-        eprint("ERROR: Source video is not on Amara! YTID=%s" % ytid)
+        eprint("ERROR: Source video is not on Public Amara! YTID=%s" % ytid)
         sys.exit(1)
 
     amara_id_public = amara_response['objects'][0]['id']
@@ -98,6 +104,10 @@ for i in range(len(ytids)):
     # Download subtitles from Public Amara for a given language
     subs = amara.download_subs(amara_id_public, lang, SUB_FORMAT)
 
+    # Trying to reduce E 429
+    if opts.sleep_int > 0:
+        sleep(opts.sleep_int)
+
     # 2. UPLOAD TO PRIVATE KHAN ACADEMY AMARA
     # Check whether the video is already on Amara
     amara_id_private = None
@@ -108,6 +118,8 @@ for i in range(len(ytids)):
 
     if not amara_id_private:
         eprint("ERROR: Video is not on Khan Academy Amara! YTID=%s" % ytid)
+        #print("Video not found, skipping..")
+        #continue
         sys.exit(1)
 
     is_present, sub_version_private = amara.check_language(amara_id_private, opts.lang)
@@ -129,7 +141,8 @@ for i in range(len(ytids)):
             print("Video already has published subtitles, uploading new version...")
 
         print(amara.list_actions(amara_id_private, opts.lang))
-        r = amara.upload_subs(amara_id_private, lang, PUBLISH_SUBTITLES, subs, SUB_FORMAT)
+        # DH TEST: Using amara_review here to try to cheat the Error 429
+        r = amara_review.upload_subs(amara_id_private, lang, PUBLISH_SUBTITLES, subs, SUB_FORMAT)
         check_upload_success(r, sub_version_private)
         print(amara.list_actions(amara_id_private, opts.lang))
         continue
