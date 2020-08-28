@@ -2,28 +2,40 @@
 import argparse, sys, requests
 from pprint import pprint
 from api.amara_api import Amara
-from utils import eprint
+from utils import eprint, download_yt_subtitles
 from time import sleep
 
 def read_cmd():
    """Function for reading command line options."""
-   desc = "Program for syncing subtitles from public Amara to Khan Academy Team Amara."
+   desc = "Program for syncing subtitles to Khan Academy Team Amara."
    parser = argparse.ArgumentParser(description=desc)
-   parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDs and possibly filenames.')
-   parser.add_argument('-l', '--lang',
-           dest = 'lang',
+   parser.add_argument('input_file',metavar='INPUT_FILE', help='Text file containing YouTube IDss.')
+   parser.add_argument(
+           '-l', '--lang', dest = 'lang',
            required = True,
            help='What language?')
-   parser.add_argument('-p', '--publish',
-           dest = 'publish', default=False,
-           action = 'store_true',
+   parser.add_argument(
+           '--sub-format', dest = 'sub_format',
+           required = False, default = 'vtt',
+           help='What language?')
+   parser.add_argument(
+           '-f', '--from-files', dest = 'file_dir',
+           required = False, default = None,
+           help='Upload subtitles from files, from given folder.')
+   parser.add_argument(
+           '-y', '--from-youtube', dest = 'yt_download',
+           required = False, default = False, action = 'store_true',
+           help='Download subtitles from YT and upload to Team Amara.')
+   parser.add_argument(
+           '-p', '--publish',
+           dest = 'publish', default=False, action = 'store_true',
            help='Are subtitles complete?')
-   parser.add_argument('-s', '--sleep',
-           dest = 'sleep_int',
-           required = False,
-           type = float, default = -1,
+   parser.add_argument(
+           '-s', '--sleep', dest = 'sleep_int',
+           required = False, type = float, default = -1,
            help='Sleep interval (seconds)')
    return parser.parse_args()
+
 
 opts = read_cmd()
 lang = opts.lang
@@ -31,9 +43,15 @@ lang = opts.lang
 AMARA_TEAM = "khan-academy"
 AMARA_SUBTITLER = 'danekhollas'
 AMARA_REVIEWER = 'dhbot'
-SUB_FORMAT = 'vtt'
+SUB_FORMAT = opts.sub_format
 
 PUBLISH_SUBTITLES = opts.publish
+# When downloading from YT, do a publish automatically,
+# since they are already published there.
+# Though, maybe if people want to keep editing them, it would be better to
+# leave them unpublished? Maybe.
+if opts.yt_download:
+    PUBLISH_SUBTITLES = True
 
 # List ytids may also contain filenames
 ytids = []
@@ -67,21 +85,11 @@ def check_work_status(amara_id, lang, team, expected_status):
         pprint(r)
         sys.exit(1)
 
-# Main loop
-for i in range(len(ytids)):
-    if len(ytids[i]) == 0:
-        print("")
-        continue
-    ytid = ytids[i][0]
-
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    video_url = 'https://www.youtube.com/watch?v=%s' % ytid
-
-    # 1. DOWNLOAD SUBS FROM PUBLIC AMARA
+def download_subs_from_public_amara(amara, ytid, lang):
+    """Returns tuple subtitles downloaded from Public Amara"""
 
     # Check whether the video is already on Amara
+    video_url = 'https://www.youtube.com/watch?v=%s' % ytid
     amara_response = amara.check_video(video_url)
     if amara_response['meta']['total_count'] == 0:
         eprint("ERROR: Source video is not on Public Amara! YTID=%s" % ytid)
@@ -103,6 +111,40 @@ for i in range(len(ytids)):
  
     # Download subtitles from Public Amara for a given language
     subs = amara.download_subs(amara_id_public, lang, SUB_FORMAT)
+    return subs, sub_version
+
+def read_subs_from_file(ytid, lang, dirname, sub_format):
+    fname = "%s/%s.%s.%s" % (dirname, ytid, lang, sub_format)
+    print("Reading subtitles from %s" % fname)
+    with open(fname, 'r') as f:
+        subs = f.read()
+    return subs
+
+def replace_double_spaces(subs):
+    return subs.replace('  ',' ');
+
+# Main loop
+for i in range(len(ytids)):
+    if len(ytids[i]) == 0:
+        print("")
+        continue
+    ytid = ytids[i][0]
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    # 1. DOWNLOAD SUBS
+    if opts.file_dir is not None :
+        subs = read_subs_from_file(ytid, lang, opts.file_dir, SUB_FORMAT)
+    elif opts.yt_download:
+        backup_dir = "subs_backup_%s" % lang
+        subs = download_yt_subtitles(lang, SUB_FORMAT, ytid, backup_dir)
+    else:
+        subs = download_subs_from_public_amara(amara, ytid, lang)
+
+    # 1.5 Correct common mistakes
+    # Remove double spaces between words
+    subs = replace_double_spaces(subs)
 
     # Trying to reduce E 429
     if opts.sleep_int > 0:
@@ -110,6 +152,7 @@ for i in range(len(ytids)):
 
     # 2. UPLOAD TO PRIVATE KHAN ACADEMY AMARA
     # Check whether the video is already on Amara
+    video_url = 'https://www.youtube.com/watch?v=%s' % ytid
     amara_id_private = None
     amara_response = amara.check_video(video_url, AMARA_TEAM)
     for r in amara_response['objects']:

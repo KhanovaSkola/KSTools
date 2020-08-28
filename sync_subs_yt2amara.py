@@ -24,8 +24,8 @@ def read_cmd():
    parser.add_argument('-l','--lang', dest = 'lang', required = True, help='Which language do we copy?')
    parser.add_argument('-r','--rewrite', dest='rewrite', default = False, action = "store_true", help = 'Rewrite subs on Amara.')
    parser.add_argument('-v','--verbose', dest='verbose', default = False, action = "store_true", help = 'Verbose output.')
-   parser.add_argument('--skip-errors', dest = 'skip', default = True, action = "store_true",
-   help = '[default] Skip subtitles that could not be downloaded. \
+   parser.add_argument('--skip-errors', dest = 'skip', default = False, action = "store_true",
+   help = 'Skip subtitles that could not be downloaded. \
          The list of failed YTIDs will be printed to \"failed_yt.dat\".')
    return parser.parse_args()
 

@@ -17,6 +17,9 @@ def read_cmd():
    parser.add_argument('--amara-public', dest = 'amara_public',
           action = 'store_true', 
           help='Generate links to Amara public workspace.')
+   parser.add_argument('--no-header', dest = 'header',
+          action = 'store_false', default = True,
+          help='Print header.')
    return parser.parse_args()
 
 
@@ -35,19 +38,20 @@ with open(opts.input_file, "r") as f:
 
 amara = Amara()
 
-print_header()
+if opts.header:
+    print_header()
 
 # Main loop
 for i in range(len(ytids)):
     if len(ytids[i]) == 0:
         print("")
         continue
-    ytid_from = ytids[i][0]
+    ytid = ytids[i][0]
 
     sys.stdout.flush()
     sys.stderr.flush()
 
-    video_url = 'https://www.youtube.com/watch?v=%s' % ytid_from
+    video_url = 'https://www.youtube.com/watch?v=%s' % ytid
 
     # Check whether the video is already on Amara
     amara_response = amara.check_video(video_url, amara_team)
@@ -72,4 +76,6 @@ for i in range(len(ytids)):
 
 
     print("%s\t%s\t%s" % (amara_link, sub_version, amara_title))
+    #title = amara_title.split("|")[0].strip().lower().replace(' ','_')
+    #print("%s\t%s" % (ytid, title))
 

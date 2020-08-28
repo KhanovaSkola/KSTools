@@ -4,8 +4,7 @@ from subprocess import Popen, PIPE
 from pprint import pprint
 from api.amara_api import Amara
 from utils import answer_me, download_yt_subtitles
-
-sub_format = 'srt'
+from time import sleep
 
 def read_cmd():
    """Function for reading command line options."""
@@ -18,9 +17,20 @@ def read_cmd():
    parser.add_argument('-a', dest='amara', action="store_true", help='Download subtitles from Amara.')
    parser.add_argument('-v', '--video', dest='video', action="store_true", default=False, help='Download video from YouTube in addition to subtitles.')
    parser.add_argument('-d', '--dir', dest='dirname', default='subs', help='Destination directory for subtitles')
+   parser.add_argument(
+           '--sub-format', dest = 'sub_format',
+           required = False, default = 'vtt',
+           help='What language?')
+   parser.add_argument(
+           '-s', '--sleep', dest = 'sleep_int',
+           required = False, type = float, default = -1,
+           help='Sleep interval (seconds)')
    return parser.parse_args()
 
 opts = read_cmd()
+if opts.youtube and opts.sub_format != 'vtt':
+    eprint("ERROR: YouTube download only support vtt format!")
+    sys.exit(1)
 
 if opts.youtube == True and opts.amara == True:
     print('Conflicting options "-y" and "-a"')
@@ -37,7 +47,7 @@ ytids = []
 # Reading file with YT id's
 with open(opts.input_file, "r") as f:
     for line in f:
-        l = line.split()
+        l = line.split(' ')
         if l[0][0] != "#":
             ytids.append(line.split())
 
@@ -58,6 +68,7 @@ for i in range(len(ytids)):
 
     ytid = ytids[i][0]
     video_url = 'https://www.youtube.com/watch?v=%s' % ytid
+    amara_id = ''
 
     if opts.video:
         video_download_cmd = "youtube-dl %s" % video_url
@@ -73,9 +84,11 @@ for i in range(len(ytids)):
 
     if opts.youtube:
 
-        subs = download_yt_subtitles(opts.lang, sub_format, ytid, opts.dirname)
+        subs = download_yt_subtitles(opts.lang, opts.sub_format, ytid, opts.dirname)
 
     elif opts.amara:
+
+        # TODO: Extract this to utils as well.
 
         # First, get Amara ID
         amara_response = amara.check_video(video_url)
@@ -83,23 +96,27 @@ for i in range(len(ytids)):
             print("ERROR: Video is not on Amara! YTID=%s" % ytid)
             sys.exit(1)
         else:
-            amara_id_from =  amara_response['objects'][0]['id']
+            amara_id =  amara_response['objects'][0]['id']
             amara_title =  amara_response['objects'][0]['title']
-            print("Downloading %s subtitles from:" % opts.lang)
+            print("Downloading %s subtitles for YTID=%s" % (opts.lang, ytid))
             print("Title: %s" % amara_title)
-            print("%s/cs/videos/%s" % (amara.AMARA_BASE_URL, amara_id_from))
+            print("%s/cs/videos/%s" % (amara.AMARA_BASE_URL, amara_id))
 
         # Check whether subtitles for a given language are present,
-        is_present, sub_version = amara.check_language(amara_id_from, opts.lang)
-        if is_present:
+        is_present, sub_version = amara.check_language(amara_id, opts.lang)
+        if is_present and sub_version > 0:
             print("Subtitle revision number: %d" % sub_version)
         else:
             print("ERROR: Amara does not have subtitles for language %s for this video!" % opts.lang)
             sys.exit(1)
  
         # Download and write subtitles from Amara for a given language
-        subs = amara.download_subs(amara_id_from, opts.lang, sub_format)
-        fname = "%s/%s.%s.%s" % (opts.dirname, ytid, opts.lang, sub_format)
+        subs = amara.download_subs(amara_id, opts.lang, opts.sub_format)
+        fname = "%s/%s.%s.%s" % (opts.dirname, ytid, opts.lang, opts.sub_format)
         with open(fname, 'w') as f:
             f.write(subs)
+
+    # Trying to reduce E 429
+    if opts.sleep_int > 0:
+        sleep(opts.sleep_int)
 
