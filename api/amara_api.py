@@ -248,6 +248,15 @@ class Amara:
         }
         return self._get(url, body)
 
+    def create_subtitle_request(self, amara_id, lang, team):
+        url = "%s/api/teams/%s/subtitle-requests/" \
+                % (self.AMARA_BASE_URL, team)
+        body = {
+           'video': amara_id,
+           'language': lang,
+        }
+        return self._post(url, body)
+
     def assign_subtitler(self, job_id, team):
         url = "%s/api/teams/%s/subtitle-requests/%s/" \
                 % (self.AMARA_BASE_URL, team, job_id)
