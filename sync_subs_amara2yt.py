@@ -107,7 +107,7 @@ for i in range(len(ytids)):
     # PART 2: DOWNLOAD SUBTITLES FROM AMARA
     subs = amara.download_subs(amara_id, opts.lang, SUB_FORMAT)
     subs_fname = "%s/%s.%s.%s" % (TEMP_FOLDER, ytid, opts.lang, SUB_FORMAT)
-    with open(subs_fname, "w") as f:
+    with open(subs_fname, "w", encoding="utf-8") as f:
         f.write(subs)
 
     # PART 3: UPLOAD SUBTITLES TO YOUTUBE

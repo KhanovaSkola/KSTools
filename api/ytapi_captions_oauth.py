@@ -5,8 +5,8 @@
 
 import httplib2, os, sys
 
-from apiclient.discovery import build_from_document
-from apiclient.errors import HttpError
+from googleapiclient.discovery import build_from_document
+from googleapiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
@@ -62,7 +62,7 @@ def get_authenticated_service(args):
     credentials = run_flow(flow, storage, args)
 
   # https://stackoverflow.com/questions/29762529/where-can-i-find-the-youtube-v3-api-captions-json-discovery-document
-  with open("%s/youtube-v3-api-captions.json" % os.path.dirname(__file__), "r") as f:
+  with open("%s/youtube-v3-api-captions.json" % os.path.dirname(__file__), "r", encoding = "utf-8") as f:
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
