@@ -124,7 +124,8 @@ def download_yt_subtitles(lang, sub_format, ytid, dirname = "subs"):
     if len(fname) < 2:
         print("ERROR: Requested subtitles were not found on YouTube.")
         print("Look into file %s for more details" % FNAME_ERR)
-        return None
+        sys.exit(1)
+        #return None
 
     if not os.path.isdir(dirname):
         os.mkdir(dirname)

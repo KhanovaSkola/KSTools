@@ -27,6 +27,10 @@ def read_cmd():
            required = False, default = False, action = 'store_true',
            help='Download subtitles from YT and upload to Team Amara.')
    parser.add_argument(
+           '-a', '--from-amara', dest = 'amara_public_download',
+           required = False, default = False, action = 'store_true',
+           help='Download subtitles from Public Amara and upload to Team Amara.')
+   parser.add_argument(
            '-p', '--publish',
            dest = 'publish', default=False, action = 'store_true',
            help='Are subtitles complete?')
@@ -111,7 +115,7 @@ def download_subs_from_public_amara(amara, ytid, lang):
  
     # Download subtitles from Public Amara for a given language
     subs = amara.download_subs(amara_id_public, lang, SUB_FORMAT)
-    return subs, sub_version
+    return subs, sub_version_public
 
 def read_subs_from_file(ytid, lang, dirname, sub_format):
     fname = "%s/%s.%s.%s" % (dirname, ytid, lang, sub_format)
@@ -139,8 +143,11 @@ for i in range(len(ytids)):
     elif opts.yt_download:
         backup_dir = "subs_backup_%s" % lang
         subs = download_yt_subtitles(lang, SUB_FORMAT, ytid, backup_dir)
-    else:
+    elif opts.amara_public_download:
         subs = download_subs_from_public_amara(amara, ytid, lang)
+    else:
+        print("ERROR: You didn't specify the subtitle source")
+        sys.exit(1)
 
     # 1.5 Correct common mistakes
     # Remove double spaces between words
