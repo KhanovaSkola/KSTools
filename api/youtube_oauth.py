@@ -190,6 +190,40 @@ def list_video(youtube, youtube_id):
     pprint(response['items'][0])
     return snippet
 
+# Get full API information about an YT video
+def update_video_language(youtube, youtube_id, lang):
+    """https://developers.google.com/youtube/v3/docs/videos/update"""
+    # Stupidly, YouTube require to have snippet.title
+    # in update body. So we first need to get it (and not change it)
+    response = youtube.videos().list(
+	part='snippet',	id=youtube_id).execute()
+
+    snippet = response['items'][0]['snippet']
+    print("%s BEFORE UPDATE: lang=%s audioLang=%s\n" %
+            (youtube_id,
+             snippet.get('defaultLanguage',''),
+             snippet.get('defaultAudioLanguage', ''))
+            )
+
+    updated_snippet = {
+                'defaultLanguage': lang,
+                'defaultAudioLanguage': lang,
+                'title': snippet['title'],
+                'categoryId': snippet['categoryId'],
+            }
+
+    response = youtube.videos().update(
+        part='id,snippet',
+        body={
+            'id': youtube_id,
+            'snippet': updated_snippet,
+        }).execute()
+
+    snippet = response['snippet']
+    print("%s AFTER UPDATE: lang=%s audioLang=%s\n" %
+            (youtube_id, snippet['defaultLanguage'],snippet['defaultAudioLanguage'])
+            )
+    return snippet
 
 # Get specific information for a list of videos
 def list_videos(youtube, youtube_ids):
@@ -348,6 +382,7 @@ if __name__ == "__main__":
   argparser.add_argument("--draft", help="Publish subtitles?", default=False, action='store_true')
   argparser.add_argument("--channelid", help="YouTube Channel ID")
   argparser.add_argument("--playlistid", help="YouTube playlist ID")
+  argparser.add_argument("--videolang", help="Language of video")
 
 
   args = argparser.parse_args()
@@ -356,7 +391,7 @@ if __name__ == "__main__":
           'upload_captions', 'download_captions', 'update_captions',
           'list_captions',
           # actions related to videos
-          'list_video', 'list_many_videos',
+          'list_video', 'list_many_videos', 'update_video_language',
           # actions related to channels
           'list_channel', 'list_channel_videos', 'list_channel_playlists',
           # actions related to playlists
@@ -366,9 +401,15 @@ if __name__ == "__main__":
       print("Available actions:", SUPPORTED_ACTIONS)
       exit("Unsupported action = %s" % args.action)
 
-  if (args.action in ('upload_captions', 'list_captions', 'list_video')):
+  if (args.action in ('upload_captions', 'list_captions', 'list_video',
+  'update_video_language')):
     if not args.videoid:
           exit("Please specify videoid using the --videoid= parameter.")
+
+  if (args.action in ('update_video_language')):
+    if not args.videolang:
+          exit("Please specify video language using the --videolang parameter.")
+
 
   if args.action in ('list_many_videos'):
     if not args.videoids_file:
@@ -433,6 +474,8 @@ if __name__ == "__main__":
     # Bulk listing specific data for videos
     elif args.action == 'list_many_videos':
         list_videos(youtube, youtube_ids)
+    elif args.action == 'update_video_language':
+        update_video_language(youtube, args.videoid, args.videolang)
     # Caption actions
     elif args.action == 'upload_captions':
         upload_caption(youtube, args.videoid, args.language, args.name, args.draft, args.file)
