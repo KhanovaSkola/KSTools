@@ -289,3 +289,9 @@ class Amara:
         }
         return self._put(url, body)
 
+    # https://apidocs.amara.org/#languages
+    def list_all_amara_languages(self):
+        url = "%s/api/languages/" % (self.AMARA_BASE_URL)
+        body = {}
+        return self._get(url, body)
+

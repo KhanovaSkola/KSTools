@@ -6,7 +6,7 @@ from api.amara_api import Amara
 
 def read_cmd():
    """Function for reading command line options."""
-   desc = "Program for mapping YouTube IDs to Amara IDs. If given video is not on Amara, it is created."
+   desc = "Program for finding missing videos or subtitles on Team Amara"
    parser = argparse.ArgumentParser(description=desc)
    parser.add_argument('input_file', metavar='INPUT_FILE',
            help='Text file containing YouTube IDs and possibly filenames.')
@@ -14,6 +14,10 @@ def read_cmd():
            '-s', '--sleep', dest = 'sleep_int',
            required = False, type = float, default = -1,
            help='Sleep interval (seconds)')
+   parser.add_argument(
+           '-l', '--lang', dest = 'lang',
+           required = False, default = None,
+           help='What language?')
    return parser.parse_args()
 
 
@@ -44,10 +48,21 @@ for i in range(len(ytids)):
     sys.stderr.flush()
 
     video_url = 'https://www.youtube.com/watch?v=%s' % ytid
+    amara_id = None
 
     # Check whether the video is already on Amara
     amara_response = amara.check_video(video_url, amara_team)
-    if amara_response['meta']['total_count'] == 0:
-        # We're printing videos that are missing on Team Amara
-        print(video_url)
+    for r in amara_response['objects']:
+        if r['team'] == amara_team:
+            amara_id = r['id']
+
+    if not amara_id:
+        print("Video missing on %s Amara!\t%s" % (amara_team, video_url))
+        continue
+
+    # Optionally, we check for subtitles in a given language
+    if opts.lang is not None:
+        is_present, sub_version = amara.check_language(amara_id, opts.lang)
+        if not is_present:
+            print("%s subtitles missing\t%s" % (opts.lang, ytid))
 
