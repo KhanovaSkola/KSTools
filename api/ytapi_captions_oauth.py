@@ -3,7 +3,7 @@
 # Usage example:
 # python captions.py --videoid='<video_id>' --name='<name>' --file='<file>' --language='<language>' --action='action'
 
-import httplib2, os, sys
+import httplib2, os, sys, re, datetime
 
 from googleapiclient.discovery import build_from_document
 from googleapiclient.errors import HttpError
@@ -13,6 +13,30 @@ from oauth2client.tools import argparser, run_flow
 
 import logging
 logging.basicConfig()
+
+def get_isosplit(s, split):
+    if split in s:
+        n, s = s.split(split)
+    else:
+        n = 0
+    return n, s
+
+# https://stackoverflow.com/a/64232786/3682277
+def parse_isoduration(s):
+    """Helper function for parsing video durations"""
+    # Remove prefix
+    s = s.split('P')[-1]
+
+    # Step through letter dividers
+    days, s = get_isosplit(s, 'D')
+    _, s = get_isosplit(s, 'T')
+    hours, s = get_isosplit(s, 'H')
+    minutes, s = get_isosplit(s, 'M')
+    seconds, s = get_isosplit(s, 'S')
+
+    # Convert all to seconds
+    dt = datetime.timedelta(days=int(days), hours=int(hours), minutes=int(minutes), seconds=int(seconds))
+    return int(dt.total_seconds())
 
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
 # the OAuth 2.0 information for this application, including its client_id and
@@ -167,12 +191,24 @@ def list_video(youtube, ytid):
         print(snippet[key])
     return snippet
 
+# Print video duration (seconds)
+def video_duration(youtube, ytid):
+    """https://developers.google.com/youtube/v3/docs/videos/list"""
+    response = youtube.videos().list(
+	part='contentDetails',
+	id=ytid).execute()
+    iso_duration = response['items'][0]['contentDetails']['duration']
+    duration = parse_isoduration(iso_duration)
+    print(ytid, duration)
+    return duration
 
 if __name__ == "__main__":
   # The "videoid" option specifies the YouTube video ID that uniquely
   # identifies the video for which the caption track will be uploaded.
   argparser.add_argument("--videoid",
     help="Required; ID for video for which the caption track will be uploaded.")
+  argparser.add_argument("--videoids-file",
+    help="Input file with one ID per row.")
   # The "name" option specifies the name of the caption trackto be used.
   argparser.add_argument("--name", help="Caption track name", default="")
   # The "file" option specifies the binary file to be uploaded as a caption track.
@@ -188,10 +224,18 @@ if __name__ == "__main__":
 
 
   args = argparser.parse_args()
+  SUPPORTED_ACTIONS = ('upload', 'download', 'update', 'list', 'list_video',
+          'video_duration')
 
-  if (args.action in ('upload', 'list', 'list_video')):
-    if not args.videoid:
+  if args.action not in SUPPORTED_ACTIONS:
+      print("Available actions:", SUPPORTED_ACTIONS)
+      exit("Unsupported action = %s" % args.action)
+
+  if (args.action in ('upload', 'list', 'list_video', 'video_duration')):
+    if not args.videoid and not args.videoids_file:
           exit("Please specify videoid using the --videoid= parameter.")
+    if args.videoid and args.videoids_file:
+        exit("Incompatible options --videoid and --videoids-file.")
 
   if (args.action in ('update', 'download', 'delete')):
     if not args.captionid:
@@ -203,28 +247,47 @@ if __name__ == "__main__":
     if not os.path.exists(args.file):
       exit("Please specify a valid file using the --file= parameter.")
 
-  if args.action in ('upload', 'update'):
+  if args.action in ('upload', 'update', 'delete'):
       # NOTE(danielhollas): this is just a precautionary measure
-      # this script should not be run directly anyway except for testing purposes
       if args.language != 'cs':
-          print("We do not support upload to other languages besides Czech!")
-          sys.exit(1)
+          exit("We do not support upload to other languages besides Czech!")
+
+  if args.action in ('upload', 'download', 'update', 'delete'):
+      if args.videoids_file:
+          exit("Option --videoids-file is incompatible with --action=%s." %
+                  args.action)
 
   youtube = get_authenticated_service(args)
 
+  if args.videoids_file:
+    with open(args.videoids_file, 'r') as f:
+        youtube_ids = set(f.read().split('\n'))
+        youtube_ids.remove('')
+  else:
+      youtube_ids = set([args.videoid])
+
+  YTID_REGEX = r'^[a-zA-Z0-9_-]{11}$'
+  for youtube_id in youtube_ids:
+    if not re.fullmatch(YTID_REGEX, youtube_id):
+      exit("Invalid YouTube ID: %s" % youtube_id)
+
   try:
     if args.action == 'upload':
-      upload_caption(youtube, args.videoid, args.language, args.name, args.draft, args.file)
-    elif args.action == 'list':
-      list_captions(youtube, args.videoid)
-    elif args.action == 'list_video':
-      list_video(youtube, args.videoid)
-    elif args.action == 'update':
-      update_caption(youtube, args.videoid, args.language, args.captionid, args.draft, args.file);
+        upload_caption(youtube, ytid, args.language, args.name, args.draft, args.file)
     elif args.action == 'download':
-      download_caption(youtube, args.captionid, 'srt')
-    else:
-      print("Nothing to do")
+        download_caption(youtube, args.captionid, 'srt')
+    elif args.action == 'update':
+        update_caption(youtube, ytid, args.language, args.captionid, args.draft, args.file);
+
+    # TODO: This could be optimized, list video API calls can be batched
+    # for up to 50 videos
+    for ytid in youtube_ids:
+        if args.action == 'list':
+            list_captions(youtube, ytid)
+        elif args.action == 'list_video':
+            list_video(youtube, ytid)
+        elif args.action == 'video_duration':
+            video_duration(youtube, ytid)
 
   except HttpError as e:
     print("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
