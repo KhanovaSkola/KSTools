@@ -6,7 +6,7 @@ from oauth2client.tools import argparser
 
 from utils import eprint, epprint
 from api.amara_api import Amara
-import api.ytapi_captions_oauth as ytapi
+import api.youtube_oauth as ytapi
 
 #SUPPORTED_LANGUAGES = ['cs','bg','ko','pl', 'my']
 # SAFETY MEASURE 

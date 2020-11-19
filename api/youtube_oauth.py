@@ -202,6 +202,76 @@ def video_duration(youtube, ytid):
     print(ytid, duration)
     return duration
 
+# Get API information about a YT video
+def list_channel(youtube, channel_id):
+    """https://developers.google.com/youtube/v3/docs/channels/list"""
+    response = youtube.channels().list(
+	part='contentDetails',
+	id=channel_id).execute()
+    snippet = response['items'][0]['snippet']
+    for key in snippet.keys():
+        print(key)
+        print(snippet[key])
+    return snippet
+
+# Get API information about a YT video
+def list_channel_playlists(youtube, channel_id):
+    """https://developers.google.com/youtube/v3/docs/channels/list"""
+    all_playlists = {}
+    response = youtube.channels().list(
+	part='contentDetails',
+	id=channel_id).execute()
+    default_playlists = response['items'][0]['contentDetails']['relatedPlaylists']
+    for pl in default_playlists:
+        title = pl
+        playlist_id = default_playlists[pl]
+        all_playlists[title] = playlist_id
+        print("%s\t%s" % (playlist_id, title))
+
+    # Now list custom playlists
+    response = youtube.playlists().list(
+	part='id,snippet',
+	channelId=channel_id).execute()
+    playlists = response['items']
+    for pl in playlists:
+        title = pl['snippet']['title']
+        playlist_id = pl['id']
+        all_playlists[title] = playlist_id
+        print("%s\t%s" % (playlist_id, title))
+
+    return all_playlists
+
+
+# List all uploaded videos for a given channel
+# use action=list_video to get a channel id
+def list_all_videos_in_channel(youtube, channel_id):
+    playlists = list_channel_playlists(youtube, channel_id)
+    playlist_id = playlists['uploads']
+    list_all_videos_in_playlist(youtube, playlist_id)
+
+
+def list_all_videos_in_playlist(youtube, playlist_id, nextPageToken=None):
+    """https://developers.google.com/youtube/v3/docs/playlistItems/list"""
+    youtube_ids = set()
+    response = youtube.playlistItems().list(
+	part='id,snippet',
+        maxResults=50,
+        pageToken=nextPageToken,
+	playlistId=playlist_id).execute()
+    for video in response['items']:
+        snippet = video['snippet']
+        title = snippet['title']
+        video_id = snippet['resourceId']['videoId']
+        youtube_ids.add(video_id)
+        print("%s\t%s" % (video_id, title))
+    if 'nextPageToken' in response.keys():
+        youtube_ids.union(list_all_videos_in_playlist(
+                youtube, playlist_id, response['nextPageToken']
+                )
+        )
+    return youtube_ids
+
+
 if __name__ == "__main__":
   # The "videoid" option specifies the YouTube video ID that uniquely
   # identifies the video for which the caption track will be uploaded.
@@ -221,11 +291,20 @@ if __name__ == "__main__":
   argparser.add_argument("--action", help="Action: list|list_video|upload|update|download")
   # The "action" option specifies the action to be processed.
   argparser.add_argument("--draft", help="Publish subtitles?", default=False, action='store_true')
+  argparser.add_argument("--channelid", help="YouTube Channel ID")
+  argparser.add_argument("--playlistid", help="YouTube playlist ID")
 
 
   args = argparser.parse_args()
-  SUPPORTED_ACTIONS = ('upload', 'download', 'update', 'list', 'list_video',
-          'video_duration')
+  SUPPORTED_ACTIONS = (
+          # actions related to captions
+          'upload', 'download', 'update', 'list',
+          # actions related to videos
+          'list_video', 'video_duration', 
+          # actions related to channels
+          'list_channel', 'list_channel_videos', 'list_channel_playlists',
+          # actions related to playlists
+          'list_playlist')
 
   if args.action not in SUPPORTED_ACTIONS:
       print("Available actions:", SUPPORTED_ACTIONS)
@@ -259,11 +338,12 @@ if __name__ == "__main__":
 
   youtube = get_authenticated_service(args)
 
+  youtube_ids = set()
   if args.videoids_file:
     with open(args.videoids_file, 'r') as f:
         youtube_ids = set(f.read().split('\n'))
         youtube_ids.remove('')
-  else:
+  elif args.videoid:
       youtube_ids = set([args.videoid])
 
   YTID_REGEX = r'^[a-zA-Z0-9_-]{11}$'
@@ -278,6 +358,14 @@ if __name__ == "__main__":
         download_caption(youtube, args.captionid, 'srt')
     elif args.action == 'update':
         update_caption(youtube, ytid, args.language, args.captionid, args.draft, args.file);
+    elif args.action == 'list_channel':
+        list_channel_playlists(youtube, args.channelid);
+    elif args.action == 'list_channel_videos':
+        list_all_videos_in_channel(youtube, args.channelid);
+    elif args.action == 'list_channel_playlists':
+        list_channel_playlists(youtube, args.channelid);
+    elif args.action == 'list_playlist':
+        list_all_videos_in_playlist(youtube, args.playlistid);
 
     # TODO: This could be optimized, list video API calls can be batched
     # for up to 50 videos

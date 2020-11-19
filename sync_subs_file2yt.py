@@ -3,7 +3,7 @@
 ##!/usr/bin/env python3
 import os, sys, requests
 from oauth2client.tools import argparser
-import api.ytapi_captions_oauth as ytapi
+import api.youtube_oauth as ytapi
 
 # SAFETY MEASURE 
 SUPPORTED_LANGUAGES = ['my']
