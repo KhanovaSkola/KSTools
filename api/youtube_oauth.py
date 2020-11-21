@@ -313,11 +313,13 @@ def list_channel_playlists(youtube, channel_id):
 
 
 # List custom playlists
-def list_custom_playlists(youtube, channel_id):
+def list_custom_playlists(youtube, channel_id, nextPageToken=None):
     """https://developers.google.com/youtube/v3/docs/channels/list"""
     all_playlists = {}
     response = youtube.playlists().list(
 	part='id,snippet',
+        maxResults=50,
+        pageToken=nextPageToken,
 	channelId=channel_id).execute()
     playlists = response['items']
     for pl in playlists:
@@ -325,6 +327,12 @@ def list_custom_playlists(youtube, channel_id):
         playlist_id = pl['id']
         all_playlists[title] = playlist_id
         print("%s\t%s" % (playlist_id, title))
+
+    if 'nextPageToken' in response.keys():
+        all_playlists.update(list_custom_playlists(
+                youtube, channel_id, response['nextPageToken']
+                )
+        )
 
     return all_playlists
 
@@ -341,6 +349,10 @@ def list_all_videos_in_channel(youtube, channel_id):
 
 def list_all_videos_in_playlist(youtube, playlist_id, nextPageToken=None):
     """https://developers.google.com/youtube/v3/docs/playlistItems/list"""
+
+    if nextPageToken is None:
+        print("Printing videos in playlist %s" % playlist_id)
+
     youtube_ids = set()
     response = youtube.playlistItems().list(
 	part='id,snippet',
