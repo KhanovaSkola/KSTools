@@ -60,7 +60,8 @@ with open(infile, "r") as f:
         if len(l) > 0 and l[0][0] != "#":
             ytids.append(line.split())
 
-amara = Amara()
+AMARA_USERNAME = 'dhbot'
+amara = Amara(AMARA_USERNAME)
 
 try:
     os.remove('youtubedl.out')

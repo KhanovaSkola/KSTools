@@ -11,11 +11,11 @@ class Amara:
     AMARA_BASE_URL = 'https://amara.org'
     EXIT_ON_HTTPERROR  = True
     
-    # File 'apifile' should contain only one line with your Amara API key and (optionally) Amara username.
+    # File 'apifile' should contain only one line with your Amara API key and Amara username.
     # Amara API can be found in Settins->Account-> API Access (bottom-right corner)
     AMARA_API_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../SECRETS/amara_api_credentials.txt"))
 
-    def __init__(self, username = 'dhbot'):
+    def __init__(self, username):
         self.username = username
         api_key = self._get_api_key(username)
         self.headers = {
@@ -85,6 +85,22 @@ class Amara:
                 sys.exit(1)
             else:
                 return r
+
+    def _delete(self, url):
+        try:
+            r = self.session.delete(url, headers = self.headers)
+            r.raise_for_status()
+            # NOTE: we're currently using this only to delete subtitle request,
+            # in which case the server does not return body, just 204 status.
+            # So we just return the HTTP code here
+            return r.status_code
+        except requests.HTTPError as e:
+            eprint('ERROR: DELETE request to %s failed\n' % url)
+            eprint(r)
+            if self.EXIT_ON_HTTPERROR:
+                sys.exit(1)
+            else:
+                return r.status_code
  
 
     def check_video(self, video_url, team = None):
@@ -257,6 +273,15 @@ class Amara:
         }
         return self._post(url, body)
 
+
+    def delete_subtitle_request(self, job_id, team):
+        """https://apidocs.amara.org/#delete-a-request"""
+        url = "%s/api/teams/%s/subtitle-requests/%s/" \
+                % (self.AMARA_BASE_URL, team, job_id)
+        body = {
+        }
+        return self._delete(url)
+
     def assign_subtitler(self, job_id, team):
         url = "%s/api/teams/%s/subtitle-requests/%s/" \
                 % (self.AMARA_BASE_URL, team, job_id)
@@ -294,4 +319,3 @@ class Amara:
         url = "%s/api/languages/" % (self.AMARA_BASE_URL)
         body = {}
         return self._get(url, body)
-

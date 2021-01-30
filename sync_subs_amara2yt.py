@@ -59,7 +59,8 @@ if not os.path.isdir(TEMP_FOLDER):
         print("Could not create temp directory %s" % (TEMP_FOLDER))
         raise
 
-amara = Amara()
+AMARA_USERNAME = 'dhbot'
+amara = Amara(AMARA_USERNAME)
 youtube = ytapi.get_authenticated_service(opts)
 
 uploaded = 0

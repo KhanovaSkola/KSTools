@@ -60,8 +60,9 @@ try:
 except:
     pass
 
+AMARA_USERNAME = 'dhbot'
 if opts.amara:
-    amara = Amara()
+    amara = Amara(AMARA_USERNAME)
 
 # Main loop
 for i in range(len(ytids)):

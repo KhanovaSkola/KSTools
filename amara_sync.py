@@ -139,12 +139,15 @@ for i in range(len(ytids)):
 
     # 1. DOWNLOAD SUBS
     if opts.file_dir is not None :
-        subs = read_subs_from_file(ytid, lang, opts.file_dir, SUB_FORMAT)
+        subs = read_subs_from_file(ytid, opts.lang, opts.file_dir, SUB_FORMAT)
     elif opts.yt_download:
         backup_dir = "subs_backup_%s" % lang
         subs = download_yt_subtitles(lang, SUB_FORMAT, ytid, backup_dir)
     elif opts.amara_public_download:
-        subs = download_subs_from_public_amara(amara, ytid, lang)
+        subs, subs_version = download_subs_from_public_amara(amara, ytid, opts.lang)
+        if subs_version < 1:
+            print("ERROR: Empty subtitles on Public Amara for YTID=%s" % ytid)
+            sys.exit(1)
     else:
         print("ERROR: You didn't specify the subtitle source")
         sys.exit(1)
@@ -152,6 +155,10 @@ for i in range(len(ytids)):
     # 1.5 Correct common mistakes
     # Remove double spaces between words
     subs = replace_double_spaces(subs)
+
+    if subs.strip() == '':
+        print("ERROR: Empty subtitles for YTID=%s" % ytid)
+        sys.exit(1)
 
     # Trying to reduce E 429
     if opts.sleep_int > 0:
@@ -168,8 +175,6 @@ for i in range(len(ytids)):
 
     if not amara_id_private:
         eprint("ERROR: Video is not on Khan Academy Amara! YTID=%s" % ytid)
-        #print("Video not found, skipping..")
-        #continue
         sys.exit(1)
 
     is_present, sub_version_private = amara.check_language(amara_id_private, opts.lang)

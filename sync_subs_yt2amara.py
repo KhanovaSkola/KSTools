@@ -82,7 +82,8 @@ except FileNotFoundError as e:
 uploaded = 0
 missing = 0
 
-amara = Amara()
+AMARA_USERNAME = 'dhbot'
+amara = Amara(AMARA_USERNAME)
 
 # Main loop
 for i in range(len(ytids)):

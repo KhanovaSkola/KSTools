@@ -36,7 +36,8 @@ with open(opts.input_file, "r") as f:
     for line in f:
         ytids.append(line.split())
 
-amara = Amara()
+AMARA_USERNAME = 'dhbot'
+amara = Amara(AMARA_USERNAME)
 
 if opts.header:
     print_header()
